@@ -1,0 +1,29 @@
+name: Deploy Website via FTP
+
+on:
+  push:
+    branches:
+      - main  # Adjust this to master or your active deployment branch if needed
+
+jobs:
+  web-deploy:
+    name: 🎉 Deploy
+    runs-on: ubuntu-latest
+    steps:
+    - name: 🚚 Get latest code
+      uses: actions/checkout@v4
+
+    - name: 🚀 FTP Deploy to Demo (outside public_html)
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      with:
+        server: 103.159.84.76
+        username: ${{ secrets.DEMO_FTP_USER }}
+        password: ${{ secrets.DEMO_FTP_PASSWORD }}
+        local-dir: ./
+        server-dir: /
+        exclude: |
+          vendor/**
+          .env
+          public/**
+          storage/**
+          .git/**
