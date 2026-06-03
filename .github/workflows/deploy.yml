@@ -20,7 +20,7 @@ jobs:
         username: ${{ secrets.DEMO_FTP_USER }}
         password: ${{ secrets.DEMO_FTP_PASSWORD }}
         local-dir: ./
-        server-dir: /
+        server-dir: /punch_logiprompt_com/
         exclude: |
           vendor/**
           .env
