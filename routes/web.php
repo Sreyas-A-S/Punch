@@ -18,6 +18,14 @@ Route::get('/db/status', function () {
     return "<pre>Exit Code: $exitCode\nOutput:\n" . Artisan::output() . "</pre>";
 });
 
+Route::get('/logs', function () {
+    $logPath = storage_path('logs/laravel.log');
+    if (!file_exists($logPath)) return "Log file not found.";
+    $logs = file_get_contents($logPath);
+    $lines = explode("\n", $logs);
+    return "<pre>" . implode("\n", array_slice($lines, -50)) . "</pre>";
+});
+
 Route::get('/db/fresh', function () {
     $exitCode = Artisan::call('migrate:fresh', ['--force' => true]);
     return "<pre>Exit Code: $exitCode\nOutput:\n" . Artisan::output() . "</pre>";
