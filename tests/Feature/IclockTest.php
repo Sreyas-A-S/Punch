@@ -23,6 +23,20 @@ class IclockTest extends TestCase
     }
 
     /**
+     * Test GET /iclock/cdata with options request.
+     */
+    public function test_cdata_options_request(): void
+    {
+        $response = $this->get('/iclock/cdata?SN=TEST_DEVICE_123&options=all');
+
+        $response->assertStatus(200);
+        $content = $response->getContent();
+        $this->assertStringContainsString('GET OPTION FROM: TEST_DEVICE_123', $content);
+        $this->assertStringContainsString('Realtime=1', $content);
+        $this->assertStringContainsString('Delay=30', $content);
+    }
+
+    /**
      * Test GET /iclock/getrequest.
      */
     public function test_getrequest(): void
