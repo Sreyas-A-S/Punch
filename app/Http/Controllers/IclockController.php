@@ -14,16 +14,10 @@ use Illuminate\Support\Str;
 
 class IclockController extends Controller
 {
-    /**
-     * Process User lines from iClock device.
-     * Format example: USER PIN=101 Name=John Doe
-     */
     private function processUserLine($line)
     {
-        // Remove 'USER ' or 'PIN ' prefix
         $data = substr($line, 5);
         
-        // Parse key=value pairs (PIN=101 Name=John Doe)
         $parts = explode("\t", str_replace(' ', "\t", $data));
         $attributes = [];
         
@@ -50,9 +44,6 @@ class IclockController extends Controller
         }
     }
 
-    /**
-     * Run maintenance commands via URL.
-     */
     public function optimizeApp()
     {
         try {
@@ -68,9 +59,6 @@ class IclockController extends Controller
         }
     }
 
-    /**
-     * Handle the /iclock/cdata route (GET and POST).
-     */
     public function cdata(Request $request)
     {
         $deviceSn = $request->query('SN');
@@ -85,7 +73,6 @@ class IclockController extends Controller
         ]);
 
         if ($request->isMethod('get')) {
-            // Handle initial handshake/options request
             if ($request->has('options')) {
                 $response = "GET OPTION FROM: {$deviceSn}\r\n" .
                            "Stamp=0\r\n" .
@@ -108,7 +95,6 @@ class IclockController extends Controller
         if ($request->isMethod('post')) {
             $content = $request->getContent();
             
-            // Log the raw body for debugging if it's small, otherwise just the size
             if (strlen($content) < 1000) {
                 Log::debug("iClock POST raw body", ['body' => $content]);
             } else {
@@ -128,13 +114,11 @@ class IclockController extends Controller
                 $line = trim($line);
                 if (empty($line)) continue;
 
-                // Handle User Data (PIN/USER)
                 if (str_starts_with($line, 'USER') || str_starts_with($line, 'PIN ')) {
                     $this->processUserLine($line);
                     continue;
                 }
 
-                // Skip other non-attendance data
                 if (str_starts_with($line, 'OP')) {
                     continue;
                 }
@@ -157,7 +141,6 @@ class IclockController extends Controller
                 }
 
                 try {
-                    // Check for duplicate punches within a 10-minute window
                     $tenMinutesAgo = date('Y-m-d H:i:s', strtotime($timestamp . ' -10 minutes'));
                     $recentPunch = AttendanceLog::where('employee_pin', $employeePin)
                         ->where('timestamp', '>=', $tenMinutesAgo)
@@ -204,10 +187,6 @@ class IclockController extends Controller
         return response("OK", 200)->header('Content-Type', 'text/plain');
     }
 
-    /**
-     * Trigger a command for a device via a web URL.
-     * Example: /iclock/trigger?sn=ABC&command=REBOOT
-     */
     public function triggerCommand(Request $request)
     {
         $deviceSn = $request->query('sn');
@@ -226,9 +205,6 @@ class IclockController extends Controller
         return response("Command '{$commandStr}' queued for device '{$deviceSn}'. Command ID: {$command->id}");
     }
 
-    /**
-     * Handle the /iclock/getrequest route (polling command requests).
-     */
     public function getrequest(Request $request)
     {
         $deviceSn = $request->query('SN');
@@ -237,7 +213,6 @@ class IclockController extends Controller
             'sn' => $deviceSn
         ]);
 
-        // Check for oldest pending command for this device
         $pendingCommand = DeviceCommand::where('device_sn', $deviceSn)
             ->where('status', 'pending')
             ->orderBy('id', 'asc')
@@ -246,7 +221,6 @@ class IclockController extends Controller
         if ($pendingCommand) {
             $pendingCommand->update(['status' => 'sent']);
             
-            // Format: C:ID:COMMAND
             $commandString = "C:{$pendingCommand->id}:{$pendingCommand->command}";
             Log::info("iClock sending command to device", ['sn' => $deviceSn, 'command' => $commandString]);
             
@@ -256,9 +230,6 @@ class IclockController extends Controller
         return response("OK", 200)->header('Content-Type', 'text/plain');
     }
 
-    /**
-     * Handle the /iclock/devicecmd route (command execution acknowledgment).
-     */
     public function devicecmd(Request $request)
     {
         $deviceSn = $request->query('SN');
@@ -269,7 +240,6 @@ class IclockController extends Controller
             'payload' => $content
         ]);
 
-        // ADMS response format is usually "ID=123&Return=0"
         parse_str($content, $response);
         $commandId = $response['ID'] ?? null;
         $returnCode = $response['Return'] ?? null;
@@ -288,4 +258,5 @@ class IclockController extends Controller
 
         return response("OK", 200)->header('Content-Type', 'text/plain');
     }
+}
 }
