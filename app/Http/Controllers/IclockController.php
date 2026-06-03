@@ -47,17 +47,19 @@ class IclockController extends Controller
         if ($request->isMethod('get')) {
             // Handle initial handshake/options request
             if ($request->has('options')) {
-                $response = "GET OPTION FROM: {$deviceSn}\n" .
-                           "Stamp=0\n" .
-                           "OpStamp=0\n" .
-                           "ErrorDelay=60\n" .
-                           "Delay=30\n" .
-                           "TransTimes=00:00;14:00\n" .
-                           "TransInterval=1\n" .
-                           "TransFlag=1111111111\n" .
-                           "Realtime=1\n" .
-                           "ServerVer=3.4.1\n";
-                return response($response, 200)->header('Content-Type', 'text/plain');
+                $response = "GET OPTION FROM: {$deviceSn}\r\n" .
+                           "Stamp=0\r\n" .
+                           "OpStamp=0\r\n" .
+                           "ErrorDelay=60\r\n" .
+                           "Delay=30\r\n" .
+                           "TransTimes=00:00;14:00\r\n" .
+                           "TransInterval=1\r\n" .
+                           "TransFlag=1111111111\r\n" .
+                           "Realtime=1\r\n" .
+                           "ServerVer=3.4.1\r\n";
+                return response($response, 200)
+                    ->header('Content-Type', 'text/plain')
+                    ->header('Connection', 'close');
             }
 
             return response("OK", 200)->header('Content-Type', 'text/plain');
