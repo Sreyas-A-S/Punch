@@ -40,6 +40,14 @@ class IclockController extends Controller
                     'password' => Hash::make(Str::random(16)),
                 ]
             );
+
+            // Self-healing: Update existing attendance logs that are missing the name
+            if ($name) {
+                AttendanceLog::where('employee_pin', $pin)
+                    ->whereNull('employee_name')
+                    ->update(['employee_name' => $name]);
+            }
+
             Log::info("iClock user synced", ['pin' => $pin, 'name' => $name]);
         }
     }

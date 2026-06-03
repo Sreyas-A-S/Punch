@@ -28,6 +28,18 @@ Route::get('/db/migrate', function () {
     return "<pre>Exit Code: $exitCode\nOutput:\n" . Artisan::output() . "</pre>";
 });
 
+Route::get('/db/backfill-names', function () {
+    $users = \App\Models\User::whereNotNull('pin')->get();
+    $count = 0;
+    foreach ($users as $user) {
+        $affected = \App\Models\AttendanceLog::where('employee_pin', $user->pin)
+            ->whereNull('employee_name')
+            ->update(['employee_name' => $user->name]);
+        $count += $affected;
+    }
+    return "Backfilled $count attendance records with names.";
+});
+
 Route::get('/db/status', function () {
     $exitCode = Artisan::call('migrate:status');
     return "<pre>Exit Code: $exitCode\nOutput:\n" . Artisan::output() . "</pre>";
