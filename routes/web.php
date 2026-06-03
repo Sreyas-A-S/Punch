@@ -37,7 +37,12 @@ Route::get('/db/seed', function () {
 });
 
 Route::any('/iclock/cdata', [IclockController::class, 'cdata']);
+Route::any('/iclock/cdata.aspx', [IclockController::class, 'cdata']);
+
 Route::any('/iclock/getrequest', [IclockController::class, 'getrequest']);
+Route::any('/iclock/getrequest.aspx', [IclockController::class, 'getrequest']);
+
 Route::any('/iclock/devicecmd', [IclockController::class, 'devicecmd']);
+Route::any('/iclock/devicecmd.aspx', [IclockController::class, 'devicecmd']);
 Route::get('/iclock/trigger', [IclockController::class, 'triggerCommand']);
 Route::get('/optimize', [IclockController::class, 'optimizeApp']);
