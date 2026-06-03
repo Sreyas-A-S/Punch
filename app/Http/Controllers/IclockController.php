@@ -156,10 +156,13 @@ class IclockController extends Controller
                         continue;
                     }
 
+                    $user = User::where('pin', $employeePin)->first();
+
                     AttendanceLog::updateOrCreate([
                         'employee_pin' => $employeePin,
                         'timestamp' => $timestamp,
                     ], [
+                        'employee_name' => $user ? $user->name : null,
                         'status' => $status,
                         'device_sn' => $deviceSn,
                     ]);

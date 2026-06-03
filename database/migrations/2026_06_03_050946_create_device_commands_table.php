@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('device_commands', function (Blueprint $table) {
             $table->id();
-            $table->string('device_sn');
+            $table->string('device_sn', 100);
             $table->string('command'); // e.g., REBOOT, CHECK, CLEAR LOG
-            $table->string('status')->default('pending'); // pending, sent, completed, error
+            $table->string('status', 20)->default('pending'); // pending, sent, completed, error
             $table->text('response_payload')->nullable();
             $table->timestamps();
 
