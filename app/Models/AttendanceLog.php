@@ -11,6 +11,7 @@ class AttendanceLog extends Model
         'employee_name',
         'timestamp',
         'status',
+        'verify_mode',
         'device_sn',
     ];
 }

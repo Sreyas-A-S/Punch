@@ -132,7 +132,29 @@ class IclockController extends Controller
 
                 $employeePin = trim($parts[0]);
                 $timestamp = trim($parts[1]);
-                $status = isset($parts[2]) ? trim($parts[2]) : null;
+                $statusCode = isset($parts[2]) ? trim($parts[2]) : '0';
+                $verifyCode = isset($parts[3]) ? trim($parts[3]) : '0';
+
+                $statusMap = [
+                    '0' => 'Check-In',
+                    '1' => 'Check-Out',
+                    '2' => 'Break-Out',
+                    '3' => 'Break-In',
+                    '4' => 'OT-In',
+                    '5' => 'OT-Out'
+                ];
+
+                $verifyMap = [
+                    '1' => 'Fingerprint',
+                    '3' => 'Password',
+                    '4' => 'Card',
+                    '15' => 'Face',
+                    '20' => 'Palm',
+                    '25' => 'FingerVein'
+                ];
+
+                $status = $statusMap[$statusCode] ?? "Status $statusCode";
+                $verifyMode = $verifyMap[$verifyCode] ?? "Other";
 
                 if (empty($employeePin) || empty($timestamp)) {
                     Log::warning("iClock skipped missing required fields", ['line' => $line, 'sn' => $deviceSn]);
@@ -164,6 +186,7 @@ class IclockController extends Controller
                     ], [
                         'employee_name' => $user ? $user->name : null,
                         'status' => $status,
+                        'verify_mode' => $verifyMode,
                         'device_sn' => $deviceSn,
                     ]);
                     $processedCount++;
