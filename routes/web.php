@@ -10,3 +10,4 @@ Route::get('/', function () {
 Route::any('/iclock/cdata', [IclockController::class, 'cdata']);
 Route::any('/iclock/getrequest', [IclockController::class, 'getrequest']);
 Route::any('/iclock/devicecmd', [IclockController::class, 'devicecmd']);
+Route::get('/iclock/trigger', [IclockController::class, 'triggerCommand']);

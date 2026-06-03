@@ -121,6 +121,28 @@ class IclockController extends Controller
     }
 
     /**
+     * Trigger a command for a device via a web URL.
+     * Example: /iclock/trigger?sn=ABC&command=REBOOT
+     */
+    public function triggerCommand(Request $request)
+    {
+        $deviceSn = $request->query('sn');
+        $commandStr = $request->query('command', 'REBOOT');
+
+        if (!$deviceSn) {
+            return response("Error: Missing 'sn' parameter", 400);
+        }
+
+        $command = DeviceCommand::create([
+            'device_sn' => $deviceSn,
+            'command' => $commandStr,
+            'status' => 'pending'
+        ]);
+
+        return response("Command '{$commandStr}' queued for device '{$deviceSn}'. Command ID: {$command->id}");
+    }
+
+    /**
      * Handle the /iclock/getrequest route (polling command requests).
      */
     public function getrequest(Request $request)
