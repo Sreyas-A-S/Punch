@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Artisan;
 
 use App\Models\User;
+use App\Models\Employee;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -32,6 +33,13 @@ class IclockController extends Controller
         $name = $attributes['name'] ?? null;
 
         if ($pin) {
+            // Sync to dedicated Employees table
+            Employee::updateOrCreate(
+                ['pin' => $pin],
+                ['name' => $name ?? "User $pin"]
+            );
+
+            // Also sync to Users table (for admin login if needed)
             User::updateOrCreate(
                 ['pin' => $pin],
                 [
@@ -41,7 +49,6 @@ class IclockController extends Controller
                 ]
             );
 
-            // Self-healing: Update existing attendance logs that are missing the name
             if ($name) {
                 AttendanceLog::where('employee_pin', $pin)
                     ->whereNull('employee_name')
@@ -50,6 +57,23 @@ class IclockController extends Controller
 
             Log::info("iClock user synced", ['pin' => $pin, 'name' => $name]);
         }
+    }
+
+    public function fetchAllUsers(Request $request)
+    {
+        $deviceSn = $request->query('sn');
+        if (!$deviceSn) {
+            return response("Error: Missing 'sn' parameter", 400);
+        }
+
+        // ADMS Command to fetch all user info from the device
+        $command = DeviceCommand::create([
+            'device_sn' => $deviceSn,
+            'command' => 'DATA QUERY USERINFO',
+            'status' => 'pending'
+        ]);
+
+        return response("Fetch Users command queued for device '{$deviceSn}'. The device will upload its user list on the next check-in.");
     }
 
     public function optimizeApp()

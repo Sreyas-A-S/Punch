@@ -72,4 +72,5 @@ Route::any('/iclock/getrequest.aspx', [IclockController::class, 'getrequest']);
 Route::any('/iclock/devicecmd', [IclockController::class, 'devicecmd']);
 Route::any('/iclock/devicecmd.aspx', [IclockController::class, 'devicecmd']);
 Route::get('/iclock/trigger', [IclockController::class, 'triggerCommand']);
+Route::get('/iclock/fetch-users', [IclockController::class, 'fetchAllUsers']);
 Route::get('/optimize', [IclockController::class, 'optimizeApp']);
