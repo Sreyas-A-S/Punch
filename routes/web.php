@@ -3,9 +3,24 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\IclockController;
+use App\Http\Controllers\AdminController;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('admin.login');
+});
+
+Route::get('/login', [AdminController::class, 'login'])->name('admin.login');
+Route::post('/login', [AdminController::class, 'authenticate'])->name('admin.authenticate');
+Route::post('/logout', [AdminController::class, 'logout'])->name('admin.logout');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
+    Route::get('/admin/attendance', [AdminController::class, 'attendance'])->name('admin.attendance');
+    Route::post('/admin/devices', [AdminController::class, 'storeDevice'])->name('admin.devices.store');
+    Route::get('/admin/devices/{id}/edit', [AdminController::class, 'editDevice'])->name('admin.devices.edit');
+    Route::put('/admin/devices/{id}', [AdminController::class, 'updateDevice'])->name('admin.devices.update');
+    Route::get('/admin/settings', [AdminController::class, 'settings'])->name('admin.settings');
+    Route::post('/admin/settings/password', [AdminController::class, 'updatePassword'])->name('admin.settings.password');
 });
 
 Route::get('/db/migrate', function () {
