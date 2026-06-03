@@ -15,60 +15,64 @@ class IclockController extends Controller
     {
         $deviceSn = $request->query('SN');
         $table = $request->query('table');
+        $ip = $request->ip();
 
-        Log::info("iClock cdata request received from Device SN: {$deviceSn}, Table: {$table}, Method: " . $request->method());
+        Log::info("iClock cdata request received", [
+            'ip' => $ip,
+            'sn' => $deviceSn,
+            'table' => $table,
+            'method' => $request->method(),
+        ]);
 
         if ($request->isMethod('get')) {
-            // Devices query capabilities/options or register themselves via GET request
-            return response("OK", 200)
-                ->header('Content-Type', 'text/plain');
+            return response("OK", 200)->header('Content-Type', 'text/plain');
         }
 
-        // Handle POST request (uploading logs)
         if ($request->isMethod('post')) {
             $content = $request->getContent();
             
+            // Log the raw body for debugging if it's small, otherwise just the size
+            if (strlen($content) < 1000) {
+                Log::debug("iClock POST raw body", ['body' => $content]);
+            } else {
+                Log::debug("iClock POST large body received", ['size' => strlen($content)]);
+            }
+
             if (empty($content)) {
+                Log::warning("iClock received empty POST body", ['sn' => $deviceSn]);
                 return response("OK", 200)->header('Content-Type', 'text/plain');
             }
 
-            // Parse tab-delimited records line-by-line
             $lines = explode("\n", $content);
             $processedCount = 0;
+            $skippedCount = 0;
 
             foreach ($lines as $line) {
                 $line = trim($line);
-                if (empty($line)) {
-                    continue;
-                }
+                if (empty($line)) continue;
 
-                // Check for standard ADMS header lines (e.g. OP LOG, ATTLOG, etc. sometimes start with header metadata)
                 if (str_starts_with($line, 'PIN') || str_starts_with($line, 'USER') || str_starts_with($line, 'OP')) {
                     continue;
                 }
 
-                // Parse tab-separated values
                 $parts = explode("\t", $line);
                 if (count($parts) < 2) {
+                    Log::warning("iClock skipped invalid line format", ['line' => $line, 'sn' => $deviceSn]);
+                    $skippedCount++;
                     continue;
                 }
 
-                // Standard field indices:
-                // 0: Employee PIN (e.g. 1, 1002)
-                // 1: DateTime String (e.g. 2026-06-02 14:02:11)
-                // 2: Verification status / code (e.g. 0, 15)
-                // 3: Verify Type
                 $employeePin = trim($parts[0]);
                 $timestamp = trim($parts[1]);
                 $status = isset($parts[2]) ? trim($parts[2]) : null;
 
-                // Validate employee_pin and timestamp basic structure
                 if (empty($employeePin) || empty($timestamp)) {
+                    Log::warning("iClock skipped missing required fields", ['line' => $line, 'sn' => $deviceSn]);
+                    $skippedCount++;
                     continue;
                 }
 
                 try {
-                    // Save to the database, ignoring or updating if already exists to prevent duplication
                     AttendanceLog::updateOrCreate([
                         'employee_pin' => $employeePin,
                         'timestamp' => $timestamp,
@@ -78,15 +82,23 @@ class IclockController extends Controller
                     ]);
                     $processedCount++;
                 } catch (\Exception $e) {
-                    Log::error("Failed to store attendance log for PIN: {$employeePin}, Time: {$timestamp}. Error: " . $e->getMessage());
+                    Log::error("iClock database failure", [
+                        'pin' => $employeePin,
+                        'time' => $timestamp,
+                        'error' => $e->getMessage(),
+                        'sn' => $deviceSn
+                    ]);
+                    $skippedCount++;
                 }
             }
 
-            Log::info("Successfully processed {$processedCount} logs from Device: {$deviceSn}");
+            Log::info("iClock process summary", [
+                'sn' => $deviceSn,
+                'processed' => $processedCount,
+                'skipped' => $skippedCount
+            ]);
 
-            // The device expects an "OK" response to clear its memory/buffer
-            return response("OK", 200)
-                ->header('Content-Type', 'text/plain');
+            return response("OK", 200)->header('Content-Type', 'text/plain');
         }
 
         return response("OK", 200)->header('Content-Type', 'text/plain');
@@ -98,10 +110,27 @@ class IclockController extends Controller
     public function getrequest(Request $request)
     {
         $deviceSn = $request->query('SN');
-        Log::info("iClock getrequest received from Device SN: {$deviceSn}");
+        Log::info("iClock getrequest received", [
+            'ip' => $request->ip(),
+            'sn' => $deviceSn
+        ]);
 
-        // Return OK to signal no pending commands
-        return response("OK", 200)
-            ->header('Content-Type', 'text/plain');
+        return response("OK", 200)->header('Content-Type', 'text/plain');
+    }
+
+    /**
+     * Handle the /iclock/devicecmd route (command execution acknowledgment).
+     */
+    public function devicecmd(Request $request)
+    {
+        $deviceSn = $request->query('SN');
+        $content = $request->getContent();
+
+        Log::info("iClock devicecmd received", [
+            'sn' => $deviceSn,
+            'payload' => $content
+        ]);
+
+        return response("OK", 200)->header('Content-Type', 'text/plain');
     }
 }
