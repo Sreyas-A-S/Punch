@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\AttendanceLog;
+use App\Models\DeviceCommand;
 use Illuminate\Support\Facades\Log;
 
 class IclockController extends Controller
@@ -130,6 +131,22 @@ class IclockController extends Controller
             'sn' => $deviceSn
         ]);
 
+        // Check for oldest pending command for this device
+        $pendingCommand = DeviceCommand::where('device_sn', $deviceSn)
+            ->where('status', 'pending')
+            ->orderBy('id', 'asc')
+            ->first();
+
+        if ($pendingCommand) {
+            $pendingCommand->update(['status' => 'sent']);
+            
+            // Format: C:ID:COMMAND
+            $commandString = "C:{$pendingCommand->id}:{$pendingCommand->command}";
+            Log::info("iClock sending command to device", ['sn' => $deviceSn, 'command' => $commandString]);
+            
+            return response($commandString, 200)->header('Content-Type', 'text/plain');
+        }
+
         return response("OK", 200)->header('Content-Type', 'text/plain');
     }
 
@@ -145,6 +162,23 @@ class IclockController extends Controller
             'sn' => $deviceSn,
             'payload' => $content
         ]);
+
+        // ADMS response format is usually "ID=123&Return=0"
+        parse_str($content, $response);
+        $commandId = $response['ID'] ?? null;
+        $returnCode = $response['Return'] ?? null;
+
+        if ($commandId) {
+            $command = DeviceCommand::find($commandId);
+            if ($command) {
+                $status = ($returnCode == '0') ? 'completed' : 'error';
+                $command->update([
+                    'status' => $status,
+                    'response_payload' => $content
+                ]);
+                Log::info("iClock command updated", ['id' => $commandId, 'status' => $status]);
+            }
+        }
 
         return response("OK", 200)->header('Content-Type', 'text/plain');
     }

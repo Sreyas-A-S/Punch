@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Models\AttendanceLog;
+use App\Models\DeviceCommand;
 use Tests\TestCase;
 
 class IclockTest extends TestCase
@@ -62,6 +63,48 @@ class IclockTest extends TestCase
 
         $response->assertStatus(200);
         $this->assertEquals('OK', $response->getContent());
+    }
+
+    /**
+     * Test the full lifecycle of a device command.
+     */
+    public function test_device_command_lifecycle(): void
+    {
+        $sn = 'TEST_DEVICE_123';
+        
+        // 1. Create a pending command
+        $command = DeviceCommand::create([
+            'device_sn' => $sn,
+            'command' => 'REBOOT',
+            'status' => 'pending'
+        ]);
+
+        // 2. Device polls for commands
+        $response = $this->get("/iclock/getrequest?SN={$sn}");
+        $response->assertStatus(200);
+        $this->assertEquals("C:{$command->id}:REBOOT", $response->getContent());
+
+        // Verify status changed to 'sent'
+        $this->assertDatabaseHas('device_commands', [
+            'id' => $command->id,
+            'status' => 'sent'
+        ]);
+
+        // 3. Device acknowledges command execution
+        $response = $this->call(
+            'POST',
+            "/iclock/devicecmd?SN={$sn}",
+            [], [], [], [],
+            "ID={$command->id}&Return=0"
+        );
+        $response->assertStatus(200);
+        $this->assertEquals('OK', $response->getContent());
+
+        // Verify status changed to 'completed'
+        $this->assertDatabaseHas('device_commands', [
+            'id' => $command->id,
+            'status' => 'completed'
+        ]);
     }
 
     /**
