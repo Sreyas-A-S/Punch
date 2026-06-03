@@ -6,9 +6,28 @@ use Illuminate\Http\Request;
 use App\Models\AttendanceLog;
 use App\Models\DeviceCommand;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Artisan;
 
 class IclockController extends Controller
 {
+    /**
+     * Run maintenance commands via URL.
+     */
+    public function optimizeApp()
+    {
+        try {
+            Artisan::call('optimize');
+            Artisan::call('route:clear');
+            Artisan::call('config:clear');
+            Artisan::call('view:clear');
+            Artisan::call('cache:clear');
+
+            return response("Application optimized and caches cleared successfully.");
+        } catch (\Exception $e) {
+            return response("Error optimizing application: " . $e->getMessage(), 500);
+        }
+    }
+
     /**
      * Handle the /iclock/cdata route (GET and POST).
      */
