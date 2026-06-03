@@ -285,4 +285,3 @@ class IclockController extends Controller
         return response("OK", 200)->header('Content-Type', 'text/plain');
     }
 }
-}
