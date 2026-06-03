@@ -13,6 +13,11 @@ Route::get('/db/migrate', function () {
     return "<pre>Exit Code: $exitCode\nOutput:\n" . Artisan::output() . "</pre>";
 });
 
+Route::get('/db/status', function () {
+    $exitCode = Artisan::call('migrate:status');
+    return "<pre>Exit Code: $exitCode\nOutput:\n" . Artisan::output() . "</pre>";
+});
+
 Route::get('/db/fresh', function () {
     $exitCode = Artisan::call('migrate:fresh', ['--force' => true]);
     return "<pre>Exit Code: $exitCode\nOutput:\n" . Artisan::output() . "</pre>";
