@@ -8,8 +8,48 @@ use App\Models\DeviceCommand;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Artisan;
 
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+
 class IclockController extends Controller
 {
+    /**
+     * Process User lines from iClock device.
+     * Format example: USER PIN=101 Name=John Doe
+     */
+    private function processUserLine($line)
+    {
+        // Remove 'USER ' or 'PIN ' prefix
+        $data = substr($line, 5);
+        
+        // Parse key=value pairs (PIN=101 Name=John Doe)
+        $parts = explode("\t", str_replace(' ', "\t", $data));
+        $attributes = [];
+        
+        foreach ($parts as $part) {
+            if (str_contains($part, '=')) {
+                [$key, $value] = explode('=', $part, 2);
+                $attributes[strtolower($key)] = trim($value);
+            }
+        }
+
+        $pin = $attributes['pin'] ?? null;
+        $name = $attributes['name'] ?? null;
+
+        if ($pin) {
+            User::updateOrCreate(
+                ['pin' => $pin],
+                [
+                    'name' => $name ?? "User $pin",
+                    'email' => "user{$pin}@punch.local",
+                    'password' => Hash::make(Str::random(16)),
+                ]
+            );
+            Log::info("iClock user synced", ['pin' => $pin, 'name' => $name]);
+        }
+    }
+
     /**
      * Run maintenance commands via URL.
      */
@@ -88,7 +128,14 @@ class IclockController extends Controller
                 $line = trim($line);
                 if (empty($line)) continue;
 
-                if (str_starts_with($line, 'PIN') || str_starts_with($line, 'USER') || str_starts_with($line, 'OP')) {
+                // Handle User Data (PIN/USER)
+                if (str_starts_with($line, 'USER') || str_starts_with($line, 'PIN ')) {
+                    $this->processUserLine($line);
+                    continue;
+                }
+
+                // Skip other non-attendance data
+                if (str_starts_with($line, 'OP')) {
                     continue;
                 }
 
@@ -110,6 +157,22 @@ class IclockController extends Controller
                 }
 
                 try {
+                    // Check for duplicate punches within a 10-minute window
+                    $tenMinutesAgo = date('Y-m-d H:i:s', strtotime($timestamp . ' -10 minutes'));
+                    $recentPunch = AttendanceLog::where('employee_pin', $employeePin)
+                        ->where('timestamp', '>=', $tenMinutesAgo)
+                        ->where('timestamp', '<=', $timestamp)
+                        ->exists();
+
+                    if ($recentPunch) {
+                        Log::debug("iClock skipped duplicate punch (spam prevention)", [
+                            'pin' => $employeePin,
+                            'timestamp' => $timestamp
+                        ]);
+                        $skippedCount++;
+                        continue;
+                    }
+
                     AttendanceLog::updateOrCreate([
                         'employee_pin' => $employeePin,
                         'timestamp' => $timestamp,
