@@ -95,6 +95,10 @@ class AdminController extends Controller
         $logs = $query->orderBy('timestamp', 'desc')->paginate(20)->withQueryString();
         $devices = SslDevice::all();
 
+        if ($request->ajax()) {
+            return view('admin.partials.attendance-table', compact('logs'));
+        }
+
         return view('admin.attendance', compact('logs', 'devices'));
     }
 

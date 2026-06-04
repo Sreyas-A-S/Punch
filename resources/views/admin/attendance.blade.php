@@ -59,7 +59,7 @@
 
 <div class="filter-card">
     <h3 style="margin-bottom: 1rem; font-size: 1.25rem;">Filter Attendance</h3>
-    <form action="{{ route('admin.attendance') }}" method="GET" class="filter-form">
+    <form action="{{ route('admin.attendance') }}" method="GET" class="filter-form" id="attendance-filter-form">
         <div>
             <label for="name">Employee Name</label>
             <input type="text" id="name" name="name" value="{{ request('name') }}" placeholder="Search by name...">
@@ -91,59 +91,63 @@
 
 <div class="card" style="overflow-x: auto;">
     <h3 style="margin-bottom: 1rem; font-size: 1.25rem;">Attendance Logs</h3>
-    <table>
-        <thead>
-            <tr>
-                <th>Sl No</th>
-                <th>Date & Time</th>
-                <th>PIN</th>
-                <th>Employee Name</th>
-                <th>Status</th>
-                <th>Device SN</th>
-                <th>Verify Mode</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($logs as $index => $log)
-                <tr>
-                    <td style="color: var(--text-muted);">{{ $loop->iteration + ($logs->currentPage() - 1) * $logs->perPage() }}</td>
-                    <td style="font-weight: 500;">{{ $log->timestamp }}</td>
-                    <td style="color: var(--text-muted);">{{ $log->employee_pin }}</td>
-                    <td style="font-weight: 600;">{{ $log->employee_name ?? 'N/A' }}</td>
-                    <td>
-                        <span class="status-badge" style="background-color: rgba(59, 130, 246, 0.1); color: #3B82F6;">
-                            {{ $log->status }}
-                        </span>
-                    </td>
-                    <td style="color: var(--text-muted); font-family: monospace;">{{ $log->device_sn }}</td>
-                    <td>{{ $log->verify_mode }}</td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">
-                        No attendance records found matching your criteria.
-                    </td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
-
-    <div class="pagination-wrapper" style="display: flex; justify-content: space-between; align-items: center;">
-        <span style="color: var(--text-muted); font-size: 0.875rem;">Showing {{ $logs->firstItem() ?? 0 }} to {{ $logs->lastItem() ?? 0 }} of {{ $logs->total() ?? 0 }} results</span>
-        <div style="display: flex; gap: 0.5rem;">
-            @if ($logs->onFirstPage())
-                <span class="btn" style="background-color: var(--border-color); color: var(--text-muted); cursor: not-allowed; padding: 0.5rem 1rem;">Previous</span>
-            @else
-                <a href="{{ $logs->previousPageUrl() }}" class="btn" style="padding: 0.5rem 1rem; text-decoration: none;">Previous</a>
-            @endif
-
-            @if ($logs->hasMorePages())
-                <a href="{{ $logs->nextPageUrl() }}" class="btn" style="padding: 0.5rem 1rem; text-decoration: none;">Next</a>
-            @else
-                <span class="btn" style="background-color: var(--border-color); color: var(--text-muted); cursor: not-allowed; padding: 0.5rem 1rem;">Next</span>
-            @endif
-        </div>
+    <div id="attendance-table-container">
+        @include('admin.partials.attendance-table')
     </div>
 </div>
+
+<script>
+    const tableContainer = document.getElementById('attendance-table-container');
+    const filterForm = document.getElementById('attendance-filter-form');
+
+    function fetchAttendance(url = null) {
+        if (!url) {
+            const formData = new FormData(filterForm);
+            const params = new URLSearchParams(formData).toString();
+            url = `{{ route('admin.attendance') }}?${params}`;
+        }
+
+        fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            tableContainer.innerHTML = html;
+            attachPaginationLinks();
+        })
+        .catch(error => console.error('Error fetching attendance:', error));
+    }
+
+    function attachPaginationLinks() {
+        const links = tableContainer.querySelectorAll('.pagination-link:not(.disabled)');
+        links.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                fetchAttendance(this.href);
+            });
+        });
+    }
+
+    // Handle filter form submission
+    filterForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        fetchAttendance();
+    });
+
+    // Auto-refresh every 15 seconds
+    setInterval(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentPage = urlParams.get('page') || 1;
+        
+        if (parseInt(currentPage) === 1) {
+            fetchAttendance();
+        }
+    }, 15000);
+
+    // Initial attachment for existing links
+    attachPaginationLinks();
+</script>
 
 @endsection
