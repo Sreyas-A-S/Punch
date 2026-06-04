@@ -20,6 +20,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/devices', [AdminController::class, 'storeDevice'])->name('admin.devices.store');
     Route::get('/admin/devices/{id}/edit', [AdminController::class, 'editDevice'])->name('admin.devices.edit');
     Route::put('/admin/devices/{id}', [AdminController::class, 'updateDevice'])->name('admin.devices.update');
+    Route::delete('/admin/devices/{id}', [AdminController::class, 'destroyDevice'])->name('admin.devices.destroy');
     Route::get('/admin/settings', [AdminController::class, 'settings'])->name('admin.settings');
     Route::post('/admin/settings/password', [AdminController::class, 'updatePassword'])->name('admin.settings.password');
 });

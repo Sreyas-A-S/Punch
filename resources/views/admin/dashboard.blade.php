@@ -155,6 +155,7 @@
                         <th>Serial Number</th>
                         <th>Status</th>
                         <th>Added On</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -171,10 +172,20 @@
                                 @endif
                             </td>
                             <td style="color: var(--text-muted);">{{ $device->created_at->format('Y-m-d') }}</td>
+                            <td>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <a href="{{ route('admin.devices.edit', $device->id) }}" class="btn" style="padding: 0.25rem 0.75rem; font-size: 0.75rem; text-decoration: none; background-color: var(--primary-color);">Edit</a>
+                                    <form action="{{ route('admin.devices.destroy', $device->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this device?');" style="display: inline;">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn" style="padding: 0.25rem 0.75rem; font-size: 0.75rem; background-color: #EF4444;">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                            <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">
                                 No devices found. Add your first device to get started!
                             </td>
                         </tr>

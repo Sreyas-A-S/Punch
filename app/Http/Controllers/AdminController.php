@@ -140,6 +140,15 @@ class AdminController extends Controller
 
         return redirect()->route('admin.dashboard')->with('success', 'Device updated successfully.');
     }
+
+    public function destroyDevice($id)
+    {
+        $device = SslDevice::findOrFail($id);
+        $device->delete();
+
+        return redirect()->route('admin.dashboard')->with('success', 'Device deleted successfully.');
+    }
+
     public function settings()
     {
         return view('admin.settings');
