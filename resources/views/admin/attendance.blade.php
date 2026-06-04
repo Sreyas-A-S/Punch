@@ -193,12 +193,12 @@ $(document).ready(function() {
         table.draw();
     });
 
-    // Auto-refresh every 30 seconds for the first page
+    // Auto-refresh every 5 seconds for the first page
     setInterval(() => {
         if (table.page() === 0) {
             table.ajax.reload(null, false); // false = stay on current page
         }
-    }, 30000);
+    }, 5000);
 });
 </script>
 
