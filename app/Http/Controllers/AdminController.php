@@ -78,28 +78,75 @@ class AdminController extends Controller
 
     public function attendance(Request $request)
     {
-        $query = AttendanceLog::query();
+        if ($request->ajax() && $request->has('draw')) {
+            $query = AttendanceLog::query();
 
-        if ($request->filled('name')) {
-            $query->where('employee_name', 'like', '%' . $request->name . '%');
+            // Search
+            if ($search = $request->input('search.value')) {
+                $query->where(function($q) use ($search) {
+                    $q->where('employee_name', 'like', "%$search%")
+                      ->orWhere('employee_pin', 'like', "%$search%")
+                      ->orWhere('device_sn', 'like', "%$search%")
+                      ->orWhere('status', 'like', "%$search%");
+                });
+            }
+
+            // Individual Filters from original form
+            if ($request->filled('name')) {
+                $query->where('employee_name', 'like', '%' . $request->name . '%');
+            }
+            if ($request->filled('date')) {
+                $query->whereDate('timestamp', $request->date);
+            }
+            if ($request->filled('device_sn')) {
+                $query->where('device_sn', $request->device_sn);
+            }
+
+            $totalData = AttendanceLog::count();
+            $totalFiltered = $query->count();
+
+            // Sorting
+            $columns = [
+                0 => 'id', 
+                1 => 'timestamp', 
+                2 => 'employee_pin', 
+                3 => 'employee_name', 
+                4 => 'status', 
+                5 => 'device_sn', 
+                6 => 'verify_mode'
+            ];
+            
+            $orderColumnIndex = $request->input('order.0.column', 1);
+            $orderColumn = $columns[$orderColumnIndex] ?? 'timestamp';
+            $orderDir = $request->input('order.0.dir', 'desc');
+
+            $logs = $query->orderBy($orderColumn, $orderDir)
+                          ->offset($request->input('start', 0))
+                          ->limit($request->input('length', 10))
+                          ->get();
+
+            $data = $logs->map(function($log, $index) use ($request) {
+                return [
+                    $request->input('start', 0) + $index + 1,
+                    $log->timestamp,
+                    $log->employee_pin,
+                    $log->employee_name ?? 'N/A',
+                    '<span class="status-badge" style="background-color: rgba(59, 130, 246, 0.1); color: #3B82F6;">' . $log->status . '</span>',
+                    '<span style="font-family: monospace;">' . $log->device_sn . '</span>',
+                    $log->verify_mode
+                ];
+            });
+
+            return response()->json([
+                "draw"            => intval($request->input('draw')),
+                "recordsTotal"    => intval($totalData),
+                "recordsFiltered" => intval($totalFiltered),
+                "data"            => $data
+            ]);
         }
 
-        if ($request->filled('date')) {
-            $query->whereDate('timestamp', $request->date);
-        }
-
-        if ($request->filled('device_sn')) {
-            $query->where('device_sn', $request->device_sn);
-        }
-
-        $logs = $query->orderBy('timestamp', 'desc')->paginate(20)->withQueryString();
         $devices = SslDevice::all();
-
-        if ($request->ajax()) {
-            return view('admin.partials.attendance-table', compact('logs'));
-        }
-
-        return view('admin.attendance', compact('logs', 'devices'));
+        return view('admin.attendance', compact('devices'));
     }
 
     public function storeDevice(Request $request)
