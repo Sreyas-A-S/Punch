@@ -4,7 +4,7 @@
 
 <div class="card" style="max-width: 600px;">
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
-        <h3 style="font-size: 1.25rem; margin: 0;">Edit SSL Device</h3>
+        <h3 style="font-size: 1.25rem; margin: 0;">Edit eSSL Device</h3>
         <a href="{{ route('admin.dashboard') }}" style="color: var(--text-muted); text-decoration: none; font-size: 0.875rem; font-weight: 500;">&larr; Back to Dashboard</a>
     </div>
 

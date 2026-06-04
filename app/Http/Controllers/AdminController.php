@@ -106,7 +106,7 @@ class AdminController extends Controller
     {
         $request->validate([
             'display_name' => 'required|string|max:255',
-            'serial_number' => 'required|string|max:255|unique:ssl_devices',
+            'serial_number' => 'required|string|max:255|unique:device_ssl_devices',
         ]);
 
         SslDevice::create([
@@ -130,7 +130,7 @@ class AdminController extends Controller
 
         $request->validate([
             'display_name' => 'required|string|max:255',
-            'serial_number' => 'required|string|max:255|unique:ssl_devices,serial_number,' . $device->id,
+            'serial_number' => 'required|string|max:255|unique:device_ssl_devices,serial_number,' . $device->id,
         ]);
 
         $device->update([

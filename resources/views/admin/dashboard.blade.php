@@ -126,7 +126,7 @@
 <div class="grid-layout">
     <!-- Add Device Form -->
     <div class="card">
-        <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Add New SSL Device</h3>
+        <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Add New eSSL Device</h3>
         <form action="{{ route('admin.devices.store') }}" method="POST">
             @csrf
             <div>
@@ -145,7 +145,7 @@
 
     <!-- Devices List -->
     <div class="card">
-        <h3 style="margin-bottom: 1rem; font-size: 1.25rem;">SSL Devices Master List</h3>
+        <h3 style="margin-bottom: 1rem; font-size: 1.25rem;">eSSL Devices Master List</h3>
         <div style="overflow-x: auto;">
             <table>
                 <thead>
