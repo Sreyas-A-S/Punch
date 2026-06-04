@@ -335,10 +335,8 @@ class IclockController extends Controller
             ]);
             Log::info("iClock new device auto-registered", ['sn' => $sn]);
         } else {
-            // Update status to online if it's not already
-            if (!$device->status) {
-                $device->update(['status' => true]);
-            }
+            // Always update to keep 'updated_at' fresh for the heartbeat
+            $device->update(['status' => true]);
         }
     }
 }
