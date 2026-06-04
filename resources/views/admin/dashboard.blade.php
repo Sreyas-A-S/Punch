@@ -150,6 +150,7 @@
             <table>
                 <thead>
                     <tr>
+                        <th>Sl No</th>
                         <th>Display Name</th>
                         <th>Serial Number</th>
                         <th>Status</th>
@@ -159,6 +160,7 @@
                 <tbody>
                     @forelse($devices as $device)
                         <tr>
+                            <td style="color: var(--text-muted);">{{ $loop->iteration }}</td>
                             <td style="font-weight: 500;">{{ $device->display_name }}</td>
                             <td style="color: var(--text-muted); font-family: monospace;">{{ $device->serial_number }}</td>
                             <td id="status-{{ $device->serial_number }}">
@@ -172,7 +174,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                            <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">
                                 No devices found. Add your first device to get started!
                             </td>
                         </tr>
