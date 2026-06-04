@@ -108,15 +108,15 @@ class AdminController extends Controller
             // Sorting
             $columns = [
                 0 => 'id', 
-                1 => 'timestamp', 
-                2 => 'employee_pin', 
-                3 => 'employee_name', 
+                1 => 'employee_pin', 
+                2 => 'employee_name', 
+                3 => 'timestamp', 
                 4 => 'status', 
                 5 => 'device_sn', 
                 6 => 'verify_mode'
             ];
             
-            $orderColumnIndex = $request->input('order.0.column', 1);
+            $orderColumnIndex = $request->input('order.0.column', 3); // Default to Date & Time
             $orderColumn = $columns[$orderColumnIndex] ?? 'timestamp';
             $orderDir = $request->input('order.0.dir', 'desc');
 
@@ -128,9 +128,9 @@ class AdminController extends Controller
             $data = $logs->map(function($log, $index) use ($request) {
                 return [
                     $request->input('start', 0) + $index + 1,
-                    $log->timestamp,
                     $log->employee_pin,
                     $log->employee_name ?? 'N/A',
+                    $log->timestamp,
                     '<span class="status-badge" style="background-color: rgba(59, 130, 246, 0.1); color: #3B82F6;">' . $log->status . '</span>',
                     '<span style="font-family: monospace;">' . $log->device_sn . '</span>',
                     $log->verify_mode

@@ -66,9 +66,9 @@
         <thead>
             <tr>
                 <th>Sl No</th>
-                <th>Date & Time</th>
                 <th>PIN</th>
                 <th>Employee Name</th>
+                <th>Date & Time</th>
                 <th>Status</th>
                 <th>Device SN</th>
                 <th>Verify Mode</th>
@@ -102,7 +102,7 @@ $(document).ready(function() {
             { orderable: true },
             { orderable: true }
         ],
-        order: [[1, 'desc']], // Default sort by Date & Time
+        order: [[3, 'desc']], // Default sort by Date & Time (Index 3)
         pageLength: 20,
         language: {
             searchPlaceholder: "Search logs...",
