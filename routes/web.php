@@ -15,6 +15,7 @@ Route::post('/logout', [AdminController::class, 'logout'])->name('admin.logout')
 
 Route::middleware('auth')->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
+    Route::get('/admin/devices/status', [AdminController::class, 'getDeviceStatus'])->name('admin.devices.status');
     Route::get('/admin/attendance', [AdminController::class, 'attendance'])->name('admin.attendance');
     Route::post('/admin/devices', [AdminController::class, 'storeDevice'])->name('admin.devices.store');
     Route::get('/admin/devices/{id}/edit', [AdminController::class, 'editDevice'])->name('admin.devices.edit');

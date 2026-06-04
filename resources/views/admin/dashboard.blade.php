@@ -111,15 +111,15 @@
 <div class="dashboard-stats">
     <div class="stat-card">
         <h3>Total Devices</h3>
-        <p>{{ $totalDevices }}</p>
+        <p id="stat-total">{{ $totalDevices }}</p>
     </div>
     <div class="stat-card">
         <h3>Working Devices</h3>
-        <p>{{ $workingDevices }}</p>
+        <p id="stat-working" style="color: #10B981;">{{ $workingDevices }}</p>
     </div>
     <div class="stat-card">
         <h3>Offline Devices</h3>
-        <p>{{ $totalDevices - $workingDevices }}</p>
+        <p id="stat-offline" style="color: #EF4444;">{{ $totalDevices - $workingDevices }}</p>
     </div>
 </div>
 
@@ -161,7 +161,7 @@
                         <tr>
                             <td style="font-weight: 500;">{{ $device->display_name }}</td>
                             <td style="color: var(--text-muted); font-family: monospace;">{{ $device->serial_number }}</td>
-                            <td>
+                            <td id="status-{{ $device->serial_number }}">
                                 @if($device->status)
                                     <span class="status-badge status-working">Working</span>
                                 @else
@@ -182,5 +182,34 @@
         </div>
     </div>
 </div>
+
+<script>
+    function updateDeviceStatuses() {
+        fetch('{{ route('admin.devices.status') }}')
+            .then(response => response.json())
+            .then(data => {
+                // Update Top Statistics
+                document.getElementById('stat-total').innerText = data.stats.total;
+                document.getElementById('stat-working').innerText = data.stats.working;
+                document.getElementById('stat-offline').innerText = data.stats.offline;
+
+                // Update Individual Rows
+                data.devices.forEach(device => {
+                    const statusCell = document.getElementById('status-' + device.serial_number);
+                    if (statusCell) {
+                        if (device.status) {
+                            statusCell.innerHTML = '<span class="status-badge status-working">Working</span>';
+                        } else {
+                            statusCell.innerHTML = '<span class="status-badge status-offline">Offline</span>';
+                        }
+                    }
+                });
+            })
+            .catch(error => console.error('Error fetching device status:', error));
+    }
+
+    // Poll every 10 seconds
+    setInterval(updateDeviceStatuses, 10000);
+</script>
 
 @endsection

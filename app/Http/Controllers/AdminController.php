@@ -54,6 +54,28 @@ class AdminController extends Controller
         return view('admin.dashboard', compact('devices', 'totalDevices', 'workingDevices'));
     }
 
+    public function getDeviceStatus()
+    {
+        $devices = SslDevice::all();
+        $total = $devices->count();
+        $working = $devices->filter(fn($d) => $d->status)->count();
+        $offline = $total - $working;
+
+        return response()->json([
+            'stats' => [
+                'total' => $total,
+                'working' => $working,
+                'offline' => $offline,
+            ],
+            'devices' => $devices->map(function ($device) {
+                return [
+                    'serial_number' => $device->serial_number,
+                    'status' => $device->status,
+                ];
+            })
+        ]);
+    }
+
     public function attendance(Request $request)
     {
         $query = AttendanceLog::query();
