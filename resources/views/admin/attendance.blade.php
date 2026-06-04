@@ -98,6 +98,7 @@
                 <th>Date & Time</th>
                 <th>PIN</th>
                 <th>Employee Name</th>
+                <th>Status</th>
                 <th>Device SN</th>
                 <th>Verify Mode</th>
             </tr>
@@ -109,6 +110,11 @@
                     <td style="font-weight: 500;">{{ $log->timestamp }}</td>
                     <td style="color: var(--text-muted);">{{ $log->employee_pin }}</td>
                     <td style="font-weight: 600;">{{ $log->employee_name ?? 'N/A' }}</td>
+                    <td>
+                        <span class="status-badge" style="background-color: rgba(59, 130, 246, 0.1); color: #3B82F6;">
+                            {{ $log->status }}
+                        </span>
+                    </td>
                     <td style="color: var(--text-muted); font-family: monospace;">{{ $log->device_sn }}</td>
                     <td>{{ $log->verify_mode }}</td>
                 </tr>
