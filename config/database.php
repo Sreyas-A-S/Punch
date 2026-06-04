@@ -128,7 +128,7 @@ return [
     */
 
     'migrations' => [
-        'table' => 'migrations',
+        'table' => 'device_migrations',
         'update_date_on_publish' => true,
     ],
 
