@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
     <style>
         :root {
             /* Default Light Theme */
@@ -215,6 +217,84 @@
             font-weight: 500;
             color: var(--text-muted);
         }
+
+        /* Global DataTable Custom Styling */
+        .dataTables_wrapper {
+            padding: 1rem 0;
+        }
+
+        table.dataTable {
+            border-collapse: collapse !important;
+            margin-top: 1rem !important;
+            border-bottom: none !important;
+        }
+
+        table.dataTable thead th {
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            background-color: rgba(0,0,0,0.02);
+            border-bottom: 1px solid var(--border-color) !important;
+            padding: 1rem !important;
+            font-size: 0.75rem;
+        }
+
+        [data-theme="dark"] table.dataTable thead th {
+            background-color: rgba(255,255,255,0.02);
+        }
+
+        table.dataTable tbody td {
+            padding: 1rem !important;
+            border-bottom: 1px solid var(--border-color) !important;
+            font-size: 0.875rem;
+            color: var(--text-color);
+            background-color: transparent !important;
+        }
+
+        .dataTables_filter input, .dataTables_length select {
+            border: 1px solid var(--border-color) !important;
+            background-color: var(--bg-color) !important;
+            color: var(--text-color) !important;
+            border-radius: 8px !important;
+            padding: 0.4rem 0.8rem !important;
+        }
+
+        .dataTables_length label {
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.5rem !important;
+            white-space: nowrap !important;
+            color: var(--text-muted) !important;
+            font-size: 0.875rem !important;
+        }
+
+        .dataTables_length select {
+            width: auto !important;
+            margin: 0 !important;
+        }
+
+        .dataTables_info {
+            color: var(--text-muted) !important;
+            font-size: 0.875rem !important;
+            padding-top: 1.5rem !important;
+        }
+
+        .dataTables_paginate {
+            padding-top: 1.5rem !important;
+        }
+
+        .dataTables_paginate .paginate_button {
+            border-radius: 8px !important;
+            border: 1px solid var(--border-color) !important;
+            background: var(--card-bg) !important;
+            color: var(--text-color) !important;
+        }
+
+        .dataTables_paginate .paginate_button.current {
+            background: var(--primary-color) !important;
+            color: white !important;
+            border-color: var(--primary-color) !important;
+        }
     </style>
 </head>
 <body>
@@ -253,6 +333,10 @@
             @yield('content')
         </div>
     </div>
+
+    <!-- jQuery and DataTables JS -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
 
     <script>
         // Theme Toggle Logic

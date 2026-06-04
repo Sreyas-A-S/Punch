@@ -147,7 +147,7 @@
     <div class="card">
         <h3 style="margin-bottom: 1rem; font-size: 1.25rem;">eSSL Devices Master List</h3>
         <div style="overflow-x: auto;">
-            <table>
+            <table id="devices-datatable">
                 <thead>
                     <tr>
                         <th>Sl No</th>
@@ -184,11 +184,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr>
-                            <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">
-                                No devices found. Add your first device to get started!
-                            </td>
-                        </tr>
+                        <!-- DataTables will handle empty state -->
                     @endforelse
                 </tbody>
             </table>
@@ -197,32 +193,45 @@
 </div>
 
 <script>
-    function updateDeviceStatuses() {
-        fetch('{{ route('admin.devices.status') }}')
-            .then(response => response.json())
-            .then(data => {
-                // Update Top Statistics
-                document.getElementById('stat-total').innerText = data.stats.total;
-                document.getElementById('stat-working').innerText = data.stats.working;
-                document.getElementById('stat-offline').innerText = data.stats.offline;
+    $(document).ready(function() {
+        const table = $('#devices-datatable').DataTable({
+            pageLength: 10,
+            columnDefs: [
+                { orderable: false, targets: [0, 5] } // Sl No and Actions not sortable
+            ],
+            language: {
+                searchPlaceholder: "Search devices...",
+                search: ""
+            }
+        });
 
-                // Update Individual Rows
-                data.devices.forEach(device => {
-                    const statusCell = document.getElementById('status-' + device.serial_number);
-                    if (statusCell) {
-                        if (device.status) {
-                            statusCell.innerHTML = '<span class="status-badge status-working">Working</span>';
-                        } else {
-                            statusCell.innerHTML = '<span class="status-badge status-offline">Offline</span>';
+        function updateDeviceStatuses() {
+            fetch('{{ route('admin.devices.status') }}')
+                .then(response => response.json())
+                .then(data => {
+                    // Update Top Statistics
+                    document.getElementById('stat-total').innerText = data.stats.total;
+                    document.getElementById('stat-working').innerText = data.stats.working;
+                    document.getElementById('stat-offline').innerText = data.stats.offline;
+
+                    // Update Individual Rows
+                    data.devices.forEach(device => {
+                        const statusCell = document.getElementById('status-' + device.serial_number);
+                        if (statusCell) {
+                            if (device.status) {
+                                statusCell.innerHTML = '<span class="status-badge status-working">Working</span>';
+                            } else {
+                                statusCell.innerHTML = '<span class="status-badge status-offline">Offline</span>';
+                            }
                         }
-                    }
-                });
-            })
-            .catch(error => console.error('Error fetching device status:', error));
-    }
+                    });
+                })
+                .catch(error => console.error('Error fetching device status:', error));
+        }
 
-    // Poll every 10 seconds
-    setInterval(updateDeviceStatuses, 10000);
+        // Poll every 10 seconds
+        setInterval(updateDeviceStatuses, 10000);
+    });
 </script>
 
 @endsection
