@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Artisan;
 
 use App\Models\User;
 use App\Models\Employee;
+use App\Models\SslDevice;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -94,6 +95,7 @@ class IclockController extends Controller
     public function cdata(Request $request)
     {
         $deviceSn = $request->query('SN');
+        $this->ensureDeviceExists($deviceSn);
         $table = $request->query('table');
         $ip = $request->ip();
 
@@ -266,6 +268,7 @@ class IclockController extends Controller
     public function getrequest(Request $request)
     {
         $deviceSn = $request->query('SN');
+        $this->ensureDeviceExists($deviceSn);
         Log::info("iClock getrequest received", [
             'ip' => $request->ip(),
             'sn' => $deviceSn
@@ -291,6 +294,7 @@ class IclockController extends Controller
     public function devicecmd(Request $request)
     {
         $deviceSn = $request->query('SN');
+        $this->ensureDeviceExists($deviceSn);
         $content = $request->getContent();
 
         Log::info("iClock devicecmd received", [
@@ -315,5 +319,26 @@ class IclockController extends Controller
         }
 
         return response("OK", 200)->header('Content-Type', 'text/plain');
+    }
+
+    private function ensureDeviceExists($sn)
+    {
+        if (!$sn) return;
+
+        $device = SslDevice::where('serial_number', $sn)->first();
+
+        if (!$device) {
+            SslDevice::create([
+                'serial_number' => $sn,
+                'display_name' => "Device $sn",
+                'status' => true,
+            ]);
+            Log::info("iClock new device auto-registered", ['sn' => $sn]);
+        } else {
+            // Update status to online if it's not already
+            if (!$device->status) {
+                $device->update(['status' => true]);
+            }
+        }
     }
 }
