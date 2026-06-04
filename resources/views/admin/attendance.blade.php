@@ -71,6 +71,20 @@
         padding: 0.4rem 0.8rem !important;
     }
 
+    .dataTables_length label {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.5rem !important;
+        white-space: nowrap !important;
+        color: var(--text-muted) !important;
+        font-size: 0.875rem !important;
+    }
+
+    .dataTables_length select {
+        width: auto !important;
+        margin: 0 !important;
+    }
+
     .dataTables_info {
         color: var(--text-muted) !important;
         font-size: 0.875rem !important;
