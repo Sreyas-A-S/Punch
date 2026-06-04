@@ -47,7 +47,9 @@ class AdminController extends Controller
     {
         $devices = SslDevice::all();
         $totalDevices = $devices->count();
-        $workingDevices = $devices->where('status', true)->count();
+        $workingDevices = $devices->filter(function ($device) {
+            return $device->status;
+        })->count();
 
         return view('admin.dashboard', compact('devices', 'totalDevices', 'workingDevices'));
     }
