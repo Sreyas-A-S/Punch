@@ -219,7 +219,17 @@ class AdminController extends Controller
     public function userUpdate()
     {
         $devices = SslDevice::all();
-        return view('admin.user-update', compact('devices'));
+        $recentCommands = \App\Models\DeviceCommand::orderBy('created_at', 'desc')->take(20)->get()->map(function($cmd) {
+            return [
+                'device_sn' => $cmd->device_sn,
+                'command' => $cmd->command,
+                'status' => $cmd->status,
+                'time' => $cmd->created_at->diffForHumans(),
+                'timestamp' => $cmd->created_at->toDateTimeString(),
+                'response' => $cmd->response_payload,
+            ];
+        });
+        return view('admin.user-update', compact('devices', 'recentCommands'));
     }
 
     public function sendCommand(Request $request)
