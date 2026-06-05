@@ -53,6 +53,10 @@
     .btn-sync-users:hover { background-color: #10B981; border-color: #10B981; }
     .btn-reboot:hover { background-color: #EF4444; border-color: #EF4444; }
     .btn-sync-time:hover { background-color: #F59E0B; border-color: #F59E0B; }
+    .btn-info-cmd { background-color: rgba(99, 102, 241, 0.1); color: #6366F1; border-color: rgba(99, 102, 241, 0.2); }
+    .btn-info-cmd:hover { background-color: #6366F1; border-color: #6366F1; }
+    .btn-clear-logs { background-color: rgba(251, 191, 36, 0.1); color: #D97706; border-color: rgba(251, 191, 36, 0.2); }
+    .btn-clear-logs:hover { background-color: #FBBF24; border-color: #FBBF24; }
 
     .status-badge {
         padding: 0.2rem 0.5rem;
@@ -89,20 +93,28 @@
                 <label>Quick Commands</label>
                 
                 <div class="quick-commands-grid">
-                    <button type="button" class="command-btn btn-sync-logs" onclick="setCommand('DATA QUERY ATTLOG')" title="Force device to upload all stored punch records">
+                    <button type="button" class="command-btn btn-sync-logs" onclick="setCommand('DATA QUERY ATTLOG', 'Sync Logs')" title="Force device to upload all stored punch records">
                         Sync Logs
                     </button>
 
-                    <button type="button" class="command-btn btn-sync-users" onclick="setCommand('DATA QUERY USERINFO')" title="Update employee names from device to server">
+                    <button type="button" class="command-btn btn-sync-users" onclick="setCommand('DATA QUERY USERINFO', 'Sync Users')" title="Update employee names from device to server">
                         Sync Users
                     </button>
 
-                    <button type="button" class="command-btn btn-reboot" onclick="setCommand('REBOOT')" title="Restart the biometric machine remotely">
+                    <button type="button" class="command-btn btn-reboot" onclick="setCommand('REBOOT', 'Reboot Device')" title="Restart the biometric machine remotely">
                         Reboot
                     </button>
 
-                    <button type="button" class="command-btn btn-sync-time" onclick="setCommand('CHECK')" title="Update device clock to match server time">
+                    <button type="button" class="command-btn btn-sync-time" onclick="setCommand('CHECK', 'Sync Time')" title="Update device clock to match server time">
                         Sync Time
+                    </button>
+
+                    <button type="button" class="command-btn btn-info-cmd" onclick="setCommand('INFO', 'System Info')" title="Request device system specifications and status">
+                        System Info
+                    </button>
+
+                    <button type="button" class="command-btn btn-clear-logs" onclick="setCommand('CLEAR LOG', 'Clear Logs')" title="Permanently delete all attendance logs stored on the device">
+                        Clear Logs
                     </button>
                 </div>
             </div>
@@ -113,6 +125,18 @@
                     <input type="text" id="custom_command" name="command" placeholder="Enter command string...">
                     <button type="submit" class="btn" style="white-space: nowrap;">Send</button>
                 </div>
+            </div>
+
+            <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px dashed var(--border-color);">
+                <label>Update User on Device</label>
+                <div style="display: grid; grid-template-columns: 1fr 2fr auto; gap: 0.5rem;">
+                    <input type="text" id="user_pin" placeholder="PIN" style="margin-bottom: 0;">
+                    <input type="text" id="user_name" placeholder="New Name" style="margin-bottom: 0;">
+                    <button type="button" class="btn" onclick="pushUserInfo()" style="white-space: nowrap;">Update</button>
+                </div>
+                <small style="color: var(--text-muted); display: block; margin-top: 0.5rem;">
+                    Pushes a specific name update to the machine for the given PIN.
+                </small>
             </div>
         </form>
     </div>
@@ -168,14 +192,15 @@ $(document).ready(function() {
     });
 });
 
-function setCommand(cmd) {
+function setCommand(cmd, label = null) {
     const device = document.getElementById('device_sn').value;
     if (!device) {
         alert('Please select a device first.');
         return;
     }
     
-    if (confirm('Queue command "' + cmd + '" for device ' + device + '?')) {
+    const displayCmd = label ? `"${label}" (${cmd})` : `"${cmd}"`;
+    if (confirm('Queue command ' + displayCmd + ' for device ' + device + '?')) {
         $.post("{{ route('admin.commands.send') }}", {
             _token: "{{ csrf_token() }}",
             device_sn: device,
@@ -189,6 +214,23 @@ function setCommand(cmd) {
             }
         });
     }
+}
+
+function pushUserInfo() {
+    const pin = $('#user_pin').val();
+    const name = $('#user_name').val();
+    
+    if (!pin || !name) {
+        alert('Please enter both PIN and Name.');
+        return;
+    }
+
+    const cmd = `SET USERINFO PIN=${pin} Name=${name}`;
+    setCommand(cmd, 'Push User Update');
+    
+    // Clear inputs after queuing
+    $('#user_pin').val('');
+    $('#user_name').val('');
 }
 
 // Custom command manual submission
