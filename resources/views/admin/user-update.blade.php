@@ -2,14 +2,51 @@
 
 @section('content')
 
+<style>
+    .user-sync-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        margin-top: 0.5rem;
+    }
+
+    .command-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.85rem 0.5rem;
+        border: 1px solid transparent;
+        border-radius: 10px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .command-btn:hover {
+        transform: translateY(-1px);
+        color: white !important;
+    }
+
+    /* Action Styles */
+    .btn-fetch-all { background-color: rgba(16, 185, 129, 0.1); color: #10B981; border-color: rgba(16, 185, 129, 0.2); }
+    .btn-fetch-all:hover { background-color: #10B981; border-color: #10B981; }
+    
+    .btn-push-all { background-color: rgba(59, 130, 246, 0.1); color: #3B82F6; border-color: rgba(59, 130, 246, 0.2); }
+    .btn-push-all:hover { background-color: #3B82F6; border-color: #3B82F6; }
+
+    .action-group {
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px dashed var(--border-color);
+    }
+</style>
+
 <div style="max-width: 600px; margin: 0 auto;">
     <div class="card">
-        <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">User Name Sync</h3>
-        <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.875rem;">
-            Use this tool to manually push a name update to a specific biometric device. 
-            This is useful when a user's name is not showing correctly on the machine's display.
-        </p>
-
+        <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">User Synchronization</h3>
+        
         <form id="user-sync-form">
             @csrf
             <div>
@@ -22,49 +59,38 @@
                 </select>
             </div>
 
-            <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(67, 24, 255, 0.05); border-radius: 12px; border: 1px solid var(--primary-color);">
-                <label style="color: var(--primary-color); font-weight: 700;">PUSH: Update Device</label>
-                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 1rem; margin-top: 0.5rem;">
-                    <div>
-                        <label for="user_pin">Employee PIN</label>
-                        <input type="text" id="user_pin" placeholder="e.g. 101" style="margin-bottom: 0;">
-                    </div>
-                    <div>
-                        <label for="user_name">Full Name</label>
-                        <input type="text" id="user_name" placeholder="e.g. John Doe" style="margin-bottom: 0;">
-                    </div>
-                </div>
-                <button type="button" class="btn" onclick="pushUserInfo()" style="width: 100%; margin-top: 1rem;">
-                    Push Name to Device
-                </button>
-            </div>
-
-            <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(16, 185, 129, 0.05); border-radius: 12px; border: 1px solid #10B981;">
-                <label style="color: #10B981; font-weight: 700;">PULL: Fetch from Device</label>
-                <div style="display: grid; grid-template-columns: 1fr auto; gap: 1rem; margin-top: 0.5rem;">
-                    <input type="text" id="fetch_pin" placeholder="Enter PIN (optional)" style="margin-bottom: 0;">
-                    <button type="button" class="btn" onclick="fetchUserInfo()" style="background-color: #10B981; white-space: nowrap;">
-                        Fetch by PIN
+            <div style="margin-top: 1.5rem;">
+                <label>Quick Sync Actions</label>
+                <div class="user-sync-grid">
+                    <button type="button" class="command-btn btn-fetch-all" onclick="fetchAllUsers()" title="Fetch all users from device and update server database">
+                        Fetch All Users
+                    </button>
+                    <button type="button" class="command-btn btn-push-all" onclick="pushAllUsers()" title="Push all employee names from server to device">
+                        Push All Names
                     </button>
                 </div>
-                <div style="margin-top: 1rem; text-align: center;">
-                    <span style="color: var(--text-muted); font-size: 0.75rem;">— OR —</span>
+            </div>
+
+            <div class="action-group">
+                <label>Update Specific User</label>
+                <div style="display: grid; grid-template-columns: 1fr 2fr auto; gap: 0.5rem; align-items: stretch;">
+                    <input type="text" id="user_pin" placeholder="PIN" style="margin-bottom: 0;">
+                    <input type="text" id="user_name" placeholder="New Name" style="margin-bottom: 0;">
+                    <button type="button" class="btn" onclick="pushUserInfo()" style="white-space: nowrap; height: 100%;">Update</button>
                 </div>
-                <button type="button" class="btn" onclick="fetchAllUsers()" style="width: 100%; margin-top: 1rem; background-color: #059669;">
-                    Fetch ALL Users from Device
-                </button>
+                <small style="color: var(--text-muted); display: block; margin-top: 0.5rem;">
+                    Sets a specific name for the given PIN on the machine.
+                </small>
+            </div>
+
+            <div class="action-group">
+                <label>Fetch Specific User</label>
+                <div style="display: flex; gap: 0.5rem; align-items: stretch;">
+                    <input type="text" id="fetch_pin" placeholder="Enter PIN to fetch details..." style="margin-bottom: 0; flex: 1;">
+                    <button type="button" class="btn" onclick="fetchUserInfo()" style="white-space: nowrap; height: 100%; background-color: #10B981;">Fetch</button>
+                </div>
             </div>
         </form>
-    </div>
-
-    <div class="card" style="margin-top: 2rem;">
-        <h3 style="margin-bottom: 1rem; font-size: 1rem;">How it works</h3>
-        <ul style="color: var(--text-muted); font-size: 0.875rem; padding-left: 1.25rem; line-height: 1.6;">
-            <li><strong>Push Name:</strong> Queues a <code>SET USERINFO</code> command. Sets the name in the machine's memory.</li>
-            <li><strong>Fetch by PIN:</strong> Queues a <code>DATA QUERY USERINFO PIN=x</code> command. Server asks for one user.</li>
-            <li><strong>Fetch ALL:</strong> Queues a <code>DATA QUERY USERINFO</code> command. Server asks for the entire user list.</li>
-            <li>Devices pull these commands on their next check-in (usually within 30s).</li>
-        </ul>
     </div>
 </div>
 
@@ -98,6 +124,10 @@ function fetchAllUsers() {
 
     const cmd = `DATA QUERY USERINFO`;
     sendUserCommand(device, cmd, `Fetch ALL users from machine`);
+}
+
+function pushAllUsers() {
+    alert('This feature will be implemented soon to push all database employees to the machine.');
 }
 
 function sendUserCommand(device, cmd, label) {
