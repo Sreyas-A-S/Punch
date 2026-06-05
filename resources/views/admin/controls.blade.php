@@ -81,19 +81,19 @@
                 <label>Quick Commands</label>
                 
                 <div class="quick-commands-grid">
-                    <button type="button" class="command-btn" onclick="setCommand('DATA QUERY ATTLOG')">
+                    <button type="button" class="command-btn" onclick="setCommand('DATA QUERY ATTLOG')" title="Force device to upload all stored punch records">
                         Sync Logs
                     </button>
 
-                    <button type="button" class="command-btn" onclick="setCommand('DATA QUERY USERINFO')">
+                    <button type="button" class="command-btn" onclick="setCommand('DATA QUERY USERINFO')" title="Update employee names from device to server">
                         Sync Users
                     </button>
 
-                    <button type="button" class="command-btn" onclick="setCommand('REBOOT')">
+                    <button type="button" class="command-btn" onclick="setCommand('REBOOT')" title="Restart the biometric machine remotely">
                         Reboot
                     </button>
 
-                    <button type="button" class="command-btn" onclick="setCommand('CHECK')">
+                    <button type="button" class="command-btn" onclick="setCommand('CHECK')" title="Update device clock to match server time">
                         Sync Time
                     </button>
                 </div>
