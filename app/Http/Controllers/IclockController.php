@@ -71,10 +71,9 @@ class IclockController extends Controller
                 $existingUser->update(['name' => $name]);
             }
 
-            // Only backfill attendance if we have a real name to provide
+            // Update all historical attendance logs to reflect the latest name
             if (!empty($name)) {
                 AttendanceLog::where('employee_pin', $pin)
-                    ->whereNull('employee_name')
                     ->update(['employee_name' => $name]);
             }
 
