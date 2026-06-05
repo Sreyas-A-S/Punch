@@ -70,6 +70,49 @@
     .status-sent { background: #DBEAFE; color: #2563EB; }
     .status-completed { background: #D1FAE5; color: #059669; }
     .status-error { background: #FEE2E2; color: #DC2626; }
+
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+    }
+
+    .modal-content {
+        background-color: var(--card-bg);
+        margin: 10% auto;
+        padding: 2rem;
+        border-radius: 16px;
+        width: 80%;
+        max-width: 600px;
+        position: relative;
+        box-shadow: var(--shadow);
+    }
+
+    .close-modal {
+        position: absolute;
+        right: 1.5rem;
+        top: 1rem;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: var(--text-muted);
+    }
+
+    pre#response-viewer {
+        background: var(--bg-color);
+        padding: 1rem;
+        border-radius: 8px;
+        overflow-x: auto;
+        font-size: 0.85rem;
+        margin-top: 1rem;
+        border: 1px solid var(--border-color);
+        white-space: pre-wrap;
+    }
 </style>
 
 <div class="controls-grid">
@@ -140,6 +183,7 @@
                         <th>Command</th>
                         <th>Status</th>
                         <th>Time</th>
+                        <th>Result</th>
                     </tr>
                 </thead>
                 <tbody id="commands-tbody">
@@ -147,6 +191,16 @@
                 </tbody>
             </table>
         </div>
+    </div>
+</div>
+
+<!-- Response Modal -->
+<div id="responseModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h3 style="margin-bottom: 0.5rem;">Command Output</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;" id="modal-command-info"></p>
+        <pre id="response-viewer"></pre>
     </div>
 </div>
 
@@ -171,6 +225,14 @@ $(document).ready(function() {
                     if (type === 'sort') return row.timestamp;
                     return `<span style="color: var(--text-muted);">${data}</span>`;
                 }
+            },
+            {
+                data: 'response',
+                orderable: false,
+                render: function(data, type, row) {
+                    if (!data) return '<span style="color: var(--text-muted); font-style: italic;">No output</span>';
+                    return `<button class="btn" style="padding: 0.25rem 0.75rem; font-size: 0.75rem;" onclick="showResponse('${row.command}', \`${data}\`)">View</button>`;
+                }
             }
         ],
         language: {
@@ -178,7 +240,24 @@ $(document).ready(function() {
             search: ""
         }
     });
+
+    // Close modal logic
+    $('.close-modal').on('click', function() {
+        $('#responseModal').hide();
+    });
+
+    $(window).on('click', function(event) {
+        if ($(event.target).is('#responseModal')) {
+            $('#responseModal').hide();
+        }
+    });
 });
+
+function showResponse(command, response) {
+    $('#modal-command-info').text('Output for: ' + command);
+    $('#response-viewer').text(response);
+    $('#responseModal').show();
+}
 
 function setCommand(cmd, label = null) {
     const device = document.getElementById('device_sn').value;

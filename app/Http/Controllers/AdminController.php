@@ -210,6 +210,7 @@ class AdminController extends Controller
                 'status' => $cmd->status,
                 'time' => $cmd->created_at->diffForHumans(),
                 'timestamp' => $cmd->created_at->toDateTimeString(),
+                'response' => $cmd->response_payload,
             ];
         });
         return view('admin.controls', compact('devices', 'recentCommands'));
@@ -251,6 +252,7 @@ class AdminController extends Controller
                 'status' => $cmd->status,
                 'time' => $cmd->created_at->diffForHumans(),
                 'timestamp' => $cmd->created_at->toDateTimeString(),
+                'response' => $cmd->response_payload,
             ];
         }));
     }
