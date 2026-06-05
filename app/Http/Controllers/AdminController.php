@@ -232,6 +232,7 @@ class AdminController extends Controller
                 'command' => $cmd->command,
                 'status' => $cmd->status,
                 'time' => $cmd->created_at->diffForHumans(),
+                'timestamp' => $cmd->created_at->toDateTimeString(),
             ];
         }));
     }

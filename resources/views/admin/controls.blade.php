@@ -25,30 +25,25 @@
 
     .command-btn {
         display: flex;
-        flex-direction: column;
         align-items: center;
         justify-content: center;
-        padding: 1.25rem 0.5rem;
+        padding: 0.85rem 0.5rem;
         background-color: var(--bg-color);
         border: 1px solid var(--border-color);
-        border-radius: 12px;
+        border-radius: 10px;
         text-align: center;
         cursor: pointer;
         transition: all 0.2s;
         font-weight: 600;
-        font-size: 0.8rem;
-        gap: 0.5rem;
+        font-size: 0.85rem;
         color: var(--text-color);
     }
 
     .command-btn:hover {
         border-color: var(--primary-color);
-        background-color: rgba(67, 24, 255, 0.05);
-        transform: translateY(-2px);
-    }
-
-    .command-btn .icon {
-        font-size: 1.5rem;
+        background-color: var(--primary-color);
+        color: white;
+        transform: translateY(-1px);
     }
 
     .status-badge {
@@ -87,22 +82,18 @@
                 
                 <div class="quick-commands-grid">
                     <button type="button" class="command-btn" onclick="setCommand('DATA QUERY ATTLOG')">
-                        <span class="icon">🔄</span>
                         Sync Logs
                     </button>
 
                     <button type="button" class="command-btn" onclick="setCommand('DATA QUERY USERINFO')">
-                        <span class="icon">👤</span>
                         Sync Users
                     </button>
 
                     <button type="button" class="command-btn" onclick="setCommand('REBOOT')">
-                        <span class="icon">🔌</span>
                         Reboot
                     </button>
 
                     <button type="button" class="command-btn" onclick="setCommand('CHECK')">
-                        <span class="icon">🕒</span>
                         Sync Time
                     </button>
                 </div>
@@ -141,7 +132,9 @@
                                     {{ $cmd->status }}
                                 </span>
                             </td>
-                            <td style="color: var(--text-muted);">{{ $cmd->created_at->diffForHumans() }}</td>
+                            <td data-order="{{ $cmd->created_at->toDateTimeString() }}" style="color: var(--text-muted);">
+                                {{ $cmd->created_at->diffForHumans() }}
+                            </td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -204,7 +197,7 @@ function updateCommandsTable() {
                 `<span style="font-family: monospace;">${cmd.device_sn}</span>`,
                 `<code>${cmd.command}</code>`,
                 `<span class="status-badge status-${cmd.status}">${cmd.status}</span>`,
-                `<span style="color: var(--text-muted);">${cmd.time}</span>`
+                `<span data-order="${cmd.timestamp}" style="color: var(--text-muted);">${cmd.time}</span>`
             ]);
         });
         commandsTable.draw(false);
