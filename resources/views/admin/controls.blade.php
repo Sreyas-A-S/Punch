@@ -151,8 +151,20 @@ let commandsTable;
 
 $(document).ready(function() {
     commandsTable = $('#commands-table').DataTable({
-        order: [[3, 'desc']], // Sort by Time by default
+        order: [[3, 'desc']], // Sort by the 4th column (Time/Timestamp)
         pageLength: 10,
+        columns: [
+            { data: 'device_sn', render: (data) => `<span style="font-family: monospace;">${data}</span>` },
+            { data: 'command', render: (data) => `<code>${data}</code>` },
+            { data: 'status', render: (data) => `<span class="status-badge status-${data}">${data}</span>` },
+            { 
+                data: 'time',
+                render: function(data, type, row) {
+                    if (type === 'sort') return row.timestamp;
+                    return `<span style="color: var(--text-muted);">${data}</span>`;
+                }
+            }
+        ],
         language: {
             searchPlaceholder: "Search commands...",
             search: ""
@@ -195,14 +207,7 @@ function updateCommandsTable() {
         if (!commandsTable) return;
         
         commandsTable.clear();
-        data.forEach(function(cmd) {
-            commandsTable.row.add([
-                `<span style="font-family: monospace;">${cmd.device_sn}</span>`,
-                `<code>${cmd.command}</code>`,
-                `<span class="status-badge status-${cmd.status}">${cmd.status}</span>`,
-                `<span data-order="${cmd.timestamp}" style="color: var(--text-muted);">${cmd.time}</span>`
-            ]);
-        });
+        commandsTable.rows.add(data);
         commandsTable.draw(false);
     });
 }

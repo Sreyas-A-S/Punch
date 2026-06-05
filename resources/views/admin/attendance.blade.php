@@ -70,7 +70,7 @@
                 <th>Employee Name</th>
                 <th>Date & Time</th>
                 <th>Status</th>
-                <th>Device SN</th>
+                <th>Device</th>
                 <th>Verify Mode</th>
             </tr>
         </thead>

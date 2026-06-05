@@ -79,15 +79,18 @@ class AdminController extends Controller
     public function attendance(Request $request)
     {
         if ($request->ajax() && $request->has('draw')) {
-            $query = AttendanceLog::query();
+            $query = AttendanceLog::query()
+                ->leftJoin('device_ssl_devices', 'device_attendance_logs.device_sn', '=', 'device_ssl_devices.serial_number')
+                ->select('device_attendance_logs.*', 'device_ssl_devices.display_name as device_name');
 
             // Search
             if ($search = $request->input('search.value')) {
                 $query->where(function($q) use ($search) {
                     $q->where('employee_name', 'like', "%$search%")
                       ->orWhere('employee_pin', 'like', "%$search%")
-                      ->orWhere('device_sn', 'like', "%$search%")
-                      ->orWhere('status', 'like', "%$search%");
+                      ->orWhere('device_attendance_logs.device_sn', 'like', "%$search%")
+                      ->orWhere('device_ssl_devices.display_name', 'like', "%$search%")
+                      ->orWhere('device_attendance_logs.status', 'like', "%$search%");
                 });
             }
 
@@ -99,7 +102,7 @@ class AdminController extends Controller
                 $query->whereDate('timestamp', $request->date);
             }
             if ($request->filled('device_sn')) {
-                $query->where('device_sn', $request->device_sn);
+                $query->where('device_attendance_logs.device_sn', $request->device_sn);
             }
 
             $totalData = AttendanceLog::count();
@@ -107,12 +110,12 @@ class AdminController extends Controller
 
             // Sorting
             $columns = [
-                0 => 'id', 
+                0 => 'device_attendance_logs.id', 
                 1 => 'employee_pin', 
                 2 => 'employee_name', 
                 3 => 'timestamp', 
-                4 => 'status', 
-                5 => 'device_sn', 
+                4 => 'device_attendance_logs.status', 
+                5 => 'device_attendance_logs.device_sn', 
                 6 => 'verify_mode'
             ];
             
@@ -126,13 +129,14 @@ class AdminController extends Controller
                           ->get();
 
             $data = $logs->map(function($log, $index) use ($request) {
+                $deviceName = $log->device_name ?: 'Unknown Device';
                 return [
                     $request->input('start', 0) + $index + 1,
                     $log->employee_pin,
                     $log->employee_name ?? 'N/A',
                     $log->timestamp,
                     '<span class="status-badge" style="background-color: rgba(59, 130, 246, 0.1); color: #3B82F6;">' . $log->status . '</span>',
-                    '<span style="font-family: monospace;">' . $log->device_sn . '</span>',
+                    '<div><strong>' . $deviceName . '</strong><br><small style="font-family: monospace; color: var(--text-muted);">' . $log->device_sn . '</small></div>',
                     $log->verify_mode
                 ];
             });
