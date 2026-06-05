@@ -28,22 +28,27 @@
         align-items: center;
         justify-content: center;
         padding: 0.85rem 0.5rem;
-        background-color: var(--bg-color);
-        border: 1px solid var(--border-color);
+        border: 1px solid transparent;
         border-radius: 10px;
         text-align: center;
         cursor: pointer;
         transition: all 0.2s;
         font-weight: 600;
         font-size: 0.85rem;
-        color: var(--text-color);
     }
 
     .command-btn:hover {
         transform: translateY(-1px);
-        color: white;
+        color: white !important;
     }
 
+    /* Base Styles */
+    .btn-sync-logs { background-color: rgba(59, 130, 246, 0.1); color: #3B82F6; border-color: rgba(59, 130, 246, 0.2); }
+    .btn-sync-users { background-color: rgba(16, 185, 129, 0.1); color: #10B981; border-color: rgba(16, 185, 129, 0.2); }
+    .btn-reboot { background-color: rgba(239, 68, 68, 0.1); color: #EF4444; border-color: rgba(239, 68, 68, 0.2); }
+    .btn-sync-time { background-color: rgba(245, 158, 11, 0.1); color: #F59E0B; border-color: rgba(245, 158, 11, 0.2); }
+
+    /* Hover Styles */
     .btn-sync-logs:hover { background-color: #3B82F6; border-color: #3B82F6; }
     .btn-sync-users:hover { background-color: #10B981; border-color: #10B981; }
     .btn-reboot:hover { background-color: #EF4444; border-color: #EF4444; }
@@ -126,20 +131,7 @@
                     </tr>
                 </thead>
                 <tbody id="commands-tbody">
-                    @foreach($recentCommands as $cmd)
-                        <tr>
-                            <td style="font-family: monospace;">{{ $cmd->device_sn }}</td>
-                            <td><code>{{ $cmd->command }}</code></td>
-                            <td>
-                                <span class="status-badge status-{{ $cmd->status }}">
-                                    {{ $cmd->status }}
-                                </span>
-                            </td>
-                            <td data-order="{{ $cmd->created_at->toDateTimeString() }}" style="color: var(--text-muted);">
-                                {{ $cmd->created_at->diffForHumans() }}
-                            </td>
-                        </tr>
-                    @endforeach
+                    <!-- DataTables will populate this -->
                 </tbody>
             </table>
         </div>
@@ -150,7 +142,19 @@
 let commandsTable;
 
 $(document).ready(function() {
+    // Initial data from server
+    const initialData = @json($recentCommands->map(function($cmd) {
+        return [
+            'device_sn' => $cmd->device_sn,
+            'command' => $cmd->command,
+            'status' => $cmd->status,
+            'time' => $cmd->created_at->diffForHumans(),
+            'timestamp' => $cmd->created_at->toDateTimeString(),
+        ];
+    }));
+
     commandsTable = $('#commands-table').DataTable({
+        data: initialData,
         order: [[3, 'desc']], // Sort by the 4th column (Time/Timestamp)
         pageLength: 10,
         columns: [
