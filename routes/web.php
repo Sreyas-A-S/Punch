@@ -23,6 +23,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/admin/devices/{id}', [AdminController::class, 'destroyDevice'])->name('admin.devices.destroy');
     
     Route::get('/admin/controls', [AdminController::class, 'controls'])->name('admin.controls');
+    Route::get('/admin/user-update', [AdminController::class, 'userUpdate'])->name('admin.user-update');
     Route::get('/admin/commands/recent', [AdminController::class, 'getRecentCommands'])->name('admin.commands.recent');
     Route::post('/admin/controls/send', [AdminController::class, 'sendCommand'])->name('admin.commands.send');
 

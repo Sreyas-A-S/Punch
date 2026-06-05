@@ -215,6 +215,12 @@ class AdminController extends Controller
         return view('admin.controls', compact('devices', 'recentCommands'));
     }
 
+    public function userUpdate()
+    {
+        $devices = SslDevice::all();
+        return view('admin.user-update', compact('devices'));
+    }
+
     public function sendCommand(Request $request)
     {
         $request->validate([

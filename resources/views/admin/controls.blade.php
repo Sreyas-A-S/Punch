@@ -121,22 +121,10 @@
 
             <div style="margin-top: 1.5rem;">
                 <label for="custom_command">Custom Command</label>
-                <div style="display: flex; gap: 0.5rem;">
-                    <input type="text" id="custom_command" name="command" placeholder="Enter command string...">
-                    <button type="submit" class="btn" style="white-space: nowrap;">Send</button>
+                <div style="display: flex; gap: 0.5rem; align-items: stretch;">
+                    <input type="text" id="custom_command" name="command" placeholder="Enter command string..." style="margin-bottom: 0; flex: 1;">
+                    <button type="submit" class="btn" style="white-space: nowrap; height: 100%;">Send</button>
                 </div>
-            </div>
-
-            <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px dashed var(--border-color);">
-                <label>Update User on Device</label>
-                <div style="display: grid; grid-template-columns: 1fr 2fr auto; gap: 0.5rem;">
-                    <input type="text" id="user_pin" placeholder="PIN" style="margin-bottom: 0;">
-                    <input type="text" id="user_name" placeholder="New Name" style="margin-bottom: 0;">
-                    <button type="button" class="btn" onclick="pushUserInfo()" style="white-space: nowrap;">Update</button>
-                </div>
-                <small style="color: var(--text-muted); display: block; margin-top: 0.5rem;">
-                    Pushes a specific name update to the machine for the given PIN.
-                </small>
             </div>
         </form>
     </div>
@@ -214,23 +202,6 @@ function setCommand(cmd, label = null) {
             }
         });
     }
-}
-
-function pushUserInfo() {
-    const pin = $('#user_pin').val();
-    const name = $('#user_name').val();
-    
-    if (!pin || !name) {
-        alert('Please enter both PIN and Name.');
-        return;
-    }
-
-    const cmd = `SET USERINFO PIN=${pin} Name=${name}`;
-    setCommand(cmd, 'Push User Update');
-    
-    // Clear inputs after queuing
-    $('#user_pin').val('');
-    $('#user_name').val('');
 }
 
 // Custom command manual submission
