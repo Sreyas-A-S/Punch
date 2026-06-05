@@ -171,6 +171,24 @@ class IclockController extends Controller
                 return response("OK", 200)->header('Content-Type', 'text/plain');
             }
 
+            // Link this data upload to a recent command if applicable (e.g., DATA QUERY or INFO)
+            $matchingCommand = DeviceCommand::where('device_sn', $deviceSn)
+                ->whereIn('status', ['sent', 'completed'])
+                ->where(function($q) {
+                    $q->where('command', 'like', 'DATA QUERY%')
+                      ->orWhere('command', 'like', 'INFO%')
+                      ->orWhere('command', 'like', 'SET USERINFO%');
+                })
+                ->orderBy('updated_at', 'desc')
+                ->first();
+
+            if ($matchingCommand) {
+                $existing = $matchingCommand->response_payload ?? '';
+                $matchingCommand->update([
+                    'response_payload' => $existing . ($existing ? "\n---\n" : "") . $content
+                ]);
+            }
+
             // If the device is sending something other than attendance, we should be careful.
             // Common tables: ATTLOG, OPERLOG, USERINFO, BIODATA, BIOPHOTO
             if ($table && !in_array(strtoupper($table), ['ATTLOG', 'OPERLOG'])) {
@@ -375,9 +393,10 @@ class IclockController extends Controller
             $command = DeviceCommand::find($commandId);
             if ($command) {
                 $status = ($returnCode == '0') ? 'completed' : 'error';
+                $existing = $command->response_payload ?? '';
                 $command->update([
                     'status' => $status,
-                    'response_payload' => $content
+                    'response_payload' => $existing . ($existing ? "\n---\n" : "") . $content
                 ]);
                 Log::info("iClock command updated", ['id' => $commandId, 'status' => $status]);
             }

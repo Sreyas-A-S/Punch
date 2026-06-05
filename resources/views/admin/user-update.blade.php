@@ -99,6 +99,8 @@
         padding: 1rem;
         border-radius: 8px;
         overflow-x: auto;
+        overflow-y: auto;
+        max-height: 400px;
         font-size: 0.85rem;
         margin-top: 1rem;
         border: 1px solid var(--border-color);
