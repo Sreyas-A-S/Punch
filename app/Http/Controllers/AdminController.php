@@ -200,6 +200,25 @@ class AdminController extends Controller
         return redirect()->route('admin.dashboard')->with('success', 'Device deleted successfully.');
     }
 
+    private function getCommandFriendlyName($commandStr)
+    {
+        if (str_starts_with($commandStr, 'DATA QUERY ATTLOG')) return 'Sync Logs';
+        if (str_starts_with($commandStr, 'DATA QUERY USERINFO PIN=')) {
+            preg_match('/PIN=(\d+)/', $commandStr, $matches);
+            return 'Fetch User ' . ($matches[1] ?? '');
+        }
+        if (str_starts_with($commandStr, 'DATA QUERY USERINFO')) return 'Sync All Users';
+        if (str_starts_with($commandStr, 'REBOOT')) return 'Reboot Device';
+        if (str_starts_with($commandStr, 'CHECK')) return 'Sync Time';
+        if (str_starts_with($commandStr, 'INFO')) return 'System Info';
+        if (str_starts_with($commandStr, 'CLEAR LOG')) return 'Clear Logs';
+        if (str_starts_with($commandStr, 'SET USERINFO')) {
+            preg_match('/PIN=(\d+)/', $commandStr, $matches);
+            return 'Update User ' . ($matches[1] ?? '');
+        }
+        return 'Custom Command';
+    }
+
     public function controls()
     {
         $devices = SslDevice::all();
@@ -207,6 +226,7 @@ class AdminController extends Controller
             return [
                 'device_sn' => $cmd->device_sn,
                 'command' => $cmd->command,
+                'friendly_name' => $this->getCommandFriendlyName($cmd->command),
                 'status' => $cmd->status,
                 'time' => $cmd->created_at->diffForHumans(),
                 'timestamp' => $cmd->created_at->toDateTimeString(),
@@ -223,6 +243,7 @@ class AdminController extends Controller
             return [
                 'device_sn' => $cmd->device_sn,
                 'command' => $cmd->command,
+                'friendly_name' => $this->getCommandFriendlyName($cmd->command),
                 'status' => $cmd->status,
                 'time' => $cmd->created_at->diffForHumans(),
                 'timestamp' => $cmd->created_at->toDateTimeString(),
@@ -259,6 +280,7 @@ class AdminController extends Controller
             return [
                 'device_sn' => $cmd->device_sn,
                 'command' => $cmd->command,
+                'friendly_name' => $this->getCommandFriendlyName($cmd->command),
                 'status' => $cmd->status,
                 'time' => $cmd->created_at->diffForHumans(),
                 'timestamp' => $cmd->created_at->toDateTimeString(),

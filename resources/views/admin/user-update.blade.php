@@ -209,7 +209,12 @@ $(document).ready(function() {
         pageLength: 10,
         columns: [
             { data: 'device_sn', render: (data) => `<span style="font-family: monospace;">${data}</span>` },
-            { data: 'command', render: (data) => `<code>${data}</code>` },
+            { 
+                data: 'command', 
+                render: function(data, type, row) {
+                    return `<div><strong>${row.friendly_name}</strong><br><code style="color: var(--text-muted); font-size: 0.75rem;">${data}</code></div>`;
+                }
+            },
             { data: 'status', render: (data) => `<span class="status-badge status-${data}">${data}</span>` },
             { 
                 data: 'time',
