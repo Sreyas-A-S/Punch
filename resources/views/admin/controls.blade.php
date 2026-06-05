@@ -40,11 +40,14 @@
     }
 
     .command-btn:hover {
-        border-color: var(--primary-color);
-        background-color: var(--primary-color);
-        color: white;
         transform: translateY(-1px);
+        color: white;
     }
+
+    .btn-sync-logs:hover { background-color: #3B82F6; border-color: #3B82F6; }
+    .btn-sync-users:hover { background-color: #10B981; border-color: #10B981; }
+    .btn-reboot:hover { background-color: #EF4444; border-color: #EF4444; }
+    .btn-sync-time:hover { background-color: #F59E0B; border-color: #F59E0B; }
 
     .status-badge {
         padding: 0.2rem 0.5rem;
@@ -81,19 +84,19 @@
                 <label>Quick Commands</label>
                 
                 <div class="quick-commands-grid">
-                    <button type="button" class="command-btn" onclick="setCommand('DATA QUERY ATTLOG')" title="Force device to upload all stored punch records">
+                    <button type="button" class="command-btn btn-sync-logs" onclick="setCommand('DATA QUERY ATTLOG')" title="Force device to upload all stored punch records">
                         Sync Logs
                     </button>
 
-                    <button type="button" class="command-btn" onclick="setCommand('DATA QUERY USERINFO')" title="Update employee names from device to server">
+                    <button type="button" class="command-btn btn-sync-users" onclick="setCommand('DATA QUERY USERINFO')" title="Update employee names from device to server">
                         Sync Users
                     </button>
 
-                    <button type="button" class="command-btn" onclick="setCommand('REBOOT')" title="Restart the biometric machine remotely">
+                    <button type="button" class="command-btn btn-reboot" onclick="setCommand('REBOOT')" title="Restart the biometric machine remotely">
                         Reboot
                     </button>
 
-                    <button type="button" class="command-btn" onclick="setCommand('CHECK')" title="Update device clock to match server time">
+                    <button type="button" class="command-btn btn-sync-time" onclick="setCommand('CHECK')" title="Update device clock to match server time">
                         Sync Time
                     </button>
                 </div>
