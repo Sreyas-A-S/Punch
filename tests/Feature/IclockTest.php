@@ -130,10 +130,10 @@ class IclockTest extends TestCase
         $this->assertEquals('OK', $response->getContent());
 
         // Check if logs are successfully created in the database
-        $this->assertDatabaseHas('attendance_logs', [
+        $this->assertDatabaseHas('device_attendance_logs', [
             'employee_pin' => '1001',
             'timestamp' => '2026-06-02 14:00:00',
-            'status' => '1',
+            'status' => 'Check-Out',
             'device_sn' => 'TEST_DEVICE_123',
         ]);
     }
@@ -172,5 +172,30 @@ class IclockTest extends TestCase
 
         $response->assertStatus(200);
         $this->assertEquals('OK', $response->getContent());
+    }
+
+    /**
+     * Test POST /iclock/cdata with biometric data (should be skipped gracefully).
+     */
+    public function test_cdata_skips_biometric_data(): void
+    {
+        $initialCount = AttendanceLog::count();
+
+        // Sample biometric data payload that previously caused SQL errors
+        $rawPayload = "FACE PIN=9\tFID=10\tSIZE=1648\n";
+        $rawPayload .= "FP PIN=35\tFID=0\tSIZE=500\n";
+
+        $response = $this->call(
+            'POST',
+            '/iclock/cdata?SN=TEST_DEVICE_123&table=BIODATA',
+            [], [], [], [],
+            $rawPayload
+        );
+
+        $response->assertStatus(200);
+        $this->assertEquals('OK', $response->getContent());
+
+        // Ensure no attendance logs were created for this junk data
+        $this->assertEquals($initialCount, AttendanceLog::count());
     }
 }

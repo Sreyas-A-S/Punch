@@ -309,6 +309,7 @@
         <div class="brand">Admin Panel</div>
         <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">Dashboard</a>
         <a href="{{ route('admin.attendance') }}" class="nav-link {{ request()->routeIs('admin.attendance') ? 'active' : '' }}">Attendance</a>
+        <a href="{{ route('admin.controls') }}" class="nav-link {{ request()->routeIs('admin.controls') ? 'active' : '' }}">Device Controls</a>
         <a href="{{ route('admin.settings') }}" class="nav-link {{ request()->routeIs('admin.settings') ? 'active' : '' }}">General Settings</a>
     </div>
     @endif

@@ -31,32 +31,54 @@ class IclockController extends Controller
         }
 
         $pin = $attributes['pin'] ?? null;
-        $name = $attributes['name'] ?? null;
+        $name = trim($attributes['name'] ?? '');
 
         if ($pin) {
             // Sync to dedicated Employees table
+            // Only update the name if the device actually sent one
+            $employeeData = ['pin' => $pin];
+            if (!empty($name)) {
+                $employeeData['name'] = $name;
+            } else {
+                // If device sent no name and we don't have this employee yet, give a default
+                $existingEmployee = Employee::where('pin', $pin)->first();
+                if (!$existingEmployee) {
+                    $employeeData['name'] = "User $pin";
+                }
+            }
+
             Employee::updateOrCreate(
                 ['pin' => $pin],
-                ['name' => $name ?? "User $pin"]
+                $employeeData
             );
 
             // Also sync to Users table (for admin login if needed)
-            User::updateOrCreate(
-                ['pin' => $pin],
-                [
-                    'name' => $name ?? "User $pin",
-                    'email' => "user{$pin}@punch.local",
-                    'password' => Hash::make(Str::random(16)),
-                ]
-            );
+            $userData = [
+                'pin' => $pin,
+                'email' => "user{$pin}@punch.local",
+            ];
+            
+            if (!empty($name)) {
+                $userData['name'] = $name;
+            }
 
-            if ($name) {
+            $existingUser = User::where('pin', $pin)->first();
+            if (!$existingUser) {
+                $userData['name'] = $userData['name'] ?? "User $pin";
+                $userData['password'] = Hash::make(Str::random(16));
+                User::create($userData);
+            } elseif (!empty($name)) {
+                $existingUser->update(['name' => $name]);
+            }
+
+            // Only backfill attendance if we have a real name to provide
+            if (!empty($name)) {
                 AttendanceLog::where('employee_pin', $pin)
                     ->whereNull('employee_name')
                     ->update(['employee_name' => $name]);
             }
 
-            Log::info("iClock user synced", ['pin' => $pin, 'name' => $name]);
+            Log::info("iClock user synced", ['pin' => $pin, 'name' => $name ?: '(empty)']);
         }
     }
 
@@ -95,6 +117,15 @@ class IclockController extends Controller
     public function cdata(Request $request)
     {
         $deviceSn = $request->query('SN');
+        
+        // Fallback for malformed URLs like /iclock/cdata.aspxSN=...
+        if (!$deviceSn) {
+            $fullUrl = $request->fullUrl();
+            if (preg_match('/SN=([A-Z0-9]+)/i', $fullUrl, $matches)) {
+                $deviceSn = $matches[1];
+            }
+        }
+
         $this->ensureDeviceExists($deviceSn);
         $table = $request->query('table');
         $ip = $request->ip();
@@ -140,6 +171,13 @@ class IclockController extends Controller
                 return response("OK", 200)->header('Content-Type', 'text/plain');
             }
 
+            // If the device is sending something other than attendance, we should be careful.
+            // Common tables: ATTLOG, OPERLOG, USERINFO, BIODATA, BIOPHOTO
+            if ($table && !in_array(strtoupper($table), ['ATTLOG', 'OPERLOG'])) {
+                Log::info("iClock skipping non-attendance table processing", ['table' => $table, 'sn' => $deviceSn]);
+                return response("OK", 200)->header('Content-Type', 'text/plain');
+            }
+
             $lines = explode("\n", $content);
             $processedCount = 0;
             $skippedCount = 0;
@@ -148,12 +186,14 @@ class IclockController extends Controller
                 $line = trim($line);
                 if (empty($line)) continue;
 
+                // Handle User/Employee sync lines
                 if (str_starts_with($line, 'USER') || str_starts_with($line, 'PIN ')) {
                     $this->processUserLine($line);
                     continue;
                 }
 
-                if (str_starts_with($line, 'OP')) {
+                // Skip Operator logs or biometric data lines that don't match attendance format
+                if (str_starts_with($line, 'OP') || str_starts_with($line, 'FACE') || str_starts_with($line, 'FP')) {
                     continue;
                 }
 
@@ -166,6 +206,13 @@ class IclockController extends Controller
 
                 $employeePin = trim($parts[0]);
                 $timestamp = trim($parts[1]);
+                
+                // Final safety check: attendance timestamps must contain a colon or space
+                if (!str_contains($timestamp, ':') || !str_contains($timestamp, '-')) {
+                    Log::debug("iClock skipping line with invalid timestamp format", ['pin' => $employeePin, 'val' => $timestamp]);
+                    $skippedCount++;
+                    continue;
+                }
                 $statusCode = isset($parts[2]) ? trim($parts[2]) : '0';
                 $verifyCode = isset($parts[3]) ? trim($parts[3]) : '0';
 
@@ -268,6 +315,15 @@ class IclockController extends Controller
     public function getrequest(Request $request)
     {
         $deviceSn = $request->query('SN');
+        
+        // Fallback for malformed URLs
+        if (!$deviceSn) {
+            $fullUrl = $request->fullUrl();
+            if (preg_match('/SN=([A-Z0-9]+)/i', $fullUrl, $matches)) {
+                $deviceSn = $matches[1];
+            }
+        }
+
         $this->ensureDeviceExists($deviceSn);
         Log::info("iClock getrequest received", [
             'ip' => $request->ip(),
@@ -294,6 +350,15 @@ class IclockController extends Controller
     public function devicecmd(Request $request)
     {
         $deviceSn = $request->query('SN');
+
+        // Fallback for malformed URLs
+        if (!$deviceSn) {
+            $fullUrl = $request->fullUrl();
+            if (preg_match('/SN=([A-Z0-9]+)/i', $fullUrl, $matches)) {
+                $deviceSn = $matches[1];
+            }
+        }
+
         $this->ensureDeviceExists($deviceSn);
         $content = $request->getContent();
 

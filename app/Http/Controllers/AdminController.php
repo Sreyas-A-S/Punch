@@ -196,6 +196,46 @@ class AdminController extends Controller
         return redirect()->route('admin.dashboard')->with('success', 'Device deleted successfully.');
     }
 
+    public function controls()
+    {
+        $devices = SslDevice::all();
+        $recentCommands = \App\Models\DeviceCommand::orderBy('created_at', 'desc')->take(20)->get();
+        return view('admin.controls', compact('devices', 'recentCommands'));
+    }
+
+    public function sendCommand(Request $request)
+    {
+        $request->validate([
+            'device_sn' => 'required|string',
+            'command' => 'required|string',
+        ]);
+
+        $command = \App\Models\DeviceCommand::create([
+            'device_sn' => $request->device_sn,
+            'command' => $request->command,
+            'status' => 'pending',
+        ]);
+
+        if ($request->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Command queued.', 'command' => $command]);
+        }
+
+        return back()->with('success', 'Command queued successfully.');
+    }
+
+    public function getRecentCommands()
+    {
+        $commands = \App\Models\DeviceCommand::orderBy('created_at', 'desc')->take(20)->get();
+        return response()->json($commands->map(function($cmd) {
+            return [
+                'device_sn' => $cmd->device_sn,
+                'command' => $cmd->command,
+                'status' => $cmd->status,
+                'time' => $cmd->created_at->diffForHumans(),
+            ];
+        }));
+    }
+
     public function settings()
     {
         return view('admin.settings');

@@ -1,0 +1,36 @@
+name: CI & Deploy
+
+on: [push, pull_request]
+
+jobs:
+  tests-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+
+      - name: Install Dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Run Tests
+        run: php artisan test
+
+      - name: 🚀 FTP Deploy to Staging
+        if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.OTHER_FTP_SERVER }}
+          username: ${{ secrets.OTHER_FTP_USER }}
+          password: ${{ secrets.OTHER_FTP_PASSWORD }}
+          local-dir: ./
+          server-dir: ./
+          exclude: |
+            vendor/**
+            .env
+            public/**
+            storage/**
+            .git/**
