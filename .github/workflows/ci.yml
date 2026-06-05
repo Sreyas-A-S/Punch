@@ -1,26 +1,19 @@
-name: CI & Deploy
+name: Deploy to Secondary Server
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
 
 jobs:
-  tests-and-deploy:
+  deploy:
+    name: 🚀 Deploy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
-
-      - name: Install Dependencies
-        run: composer install --prefer-dist --no-progress
-
-      - name: Run Tests
-        run: php artisan test
+      - name: 🚚 Get latest code
+        uses: actions/checkout@v4
 
       - name: 🚀 FTP Deploy to Staging
-        if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.OTHER_FTP_SERVER }}
