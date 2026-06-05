@@ -16,31 +16,39 @@
         }
     }
 
+    .quick-commands-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        margin-top: 0.5rem;
+    }
+
     .command-btn {
-        display: block;
-        width: 100%;
-        padding: 0.75rem;
-        margin-bottom: 0.75rem;
-        background-color: var(--card-bg);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 1.25rem 0.5rem;
+        background-color: var(--bg-color);
         border: 1px solid var(--border-color);
-        border-radius: 8px;
-        text-align: left;
+        border-radius: 12px;
+        text-align: center;
         cursor: pointer;
         transition: all 0.2s;
-        font-weight: 500;
+        font-weight: 600;
+        font-size: 0.8rem;
+        gap: 0.5rem;
+        color: var(--text-color);
     }
 
     .command-btn:hover {
         border-color: var(--primary-color);
-        background-color: rgba(59, 130, 246, 0.05);
+        background-color: rgba(67, 24, 255, 0.05);
+        transform: translateY(-2px);
     }
 
-    .command-btn span {
-        display: block;
-        font-size: 0.75rem;
-        color: var(--text-muted);
-        font-weight: 400;
-        margin-top: 0.25rem;
+    .command-btn .icon {
+        font-size: 1.5rem;
     }
 
     .status-badge {
@@ -77,25 +85,27 @@
             <div style="margin-top: 1.5rem;">
                 <label>Quick Commands</label>
                 
-                <button type="button" class="command-btn" onclick="setCommand('DATA QUERY ATTLOG')">
-                    Sync All Attendance
-                    <span>Force device to upload all stored punch records.</span>
-                </button>
+                <div class="quick-commands-grid">
+                    <button type="button" class="command-btn" onclick="setCommand('DATA QUERY ATTLOG')">
+                        <span class="icon">🔄</span>
+                        Sync Logs
+                    </button>
 
-                <button type="button" class="command-btn" onclick="setCommand('DATA QUERY USERINFO')">
-                    Sync All User Names
-                    <span>Update employee names from device to server.</span>
-                </button>
+                    <button type="button" class="command-btn" onclick="setCommand('DATA QUERY USERINFO')">
+                        <span class="icon">👤</span>
+                        Sync Users
+                    </button>
 
-                <button type="button" class="command-btn" onclick="setCommand('REBOOT')">
-                    Reboot Device
-                    <span>Restart the biometric machine remotely.</span>
-                </button>
+                    <button type="button" class="command-btn" onclick="setCommand('REBOOT')">
+                        <span class="icon">🔌</span>
+                        Reboot
+                    </button>
 
-                <button type="button" class="command-btn" onclick="setCommand('CHECK')">
-                    Sync Date & Time
-                    <span>Update device clock to match server time.</span>
-                </button>
+                    <button type="button" class="command-btn" onclick="setCommand('CHECK')">
+                        <span class="icon">🕒</span>
+                        Sync Time
+                    </button>
+                </div>
             </div>
 
             <div style="margin-top: 1.5rem;">
@@ -141,6 +151,19 @@
 </div>
 
 <script>
+let commandsTable;
+
+$(document).ready(function() {
+    commandsTable = $('#commands-table').DataTable({
+        order: [[3, 'desc']], // Sort by Time by default
+        pageLength: 10,
+        language: {
+            searchPlaceholder: "Search commands...",
+            search: ""
+        }
+    });
+});
+
 function setCommand(cmd) {
     const device = document.getElementById('device_sn').value;
     if (!device) {
@@ -173,20 +196,18 @@ $('#command-form').on('submit', function(e) {
 
 function updateCommandsTable() {
     $.get("{{ route('admin.commands.recent') }}", function(data) {
-        let html = '';
+        if (!commandsTable) return;
+        
+        commandsTable.clear();
         data.forEach(function(cmd) {
-            html += `<tr>
-                <td style="font-family: monospace;">${cmd.device_sn}</td>
-                <td><code>${cmd.command}</code></td>
-                <td>
-                    <span class="status-badge status-${cmd.status}">
-                        ${cmd.status}
-                    </span>
-                </td>
-                <td style="color: var(--text-muted);">${cmd.time}</td>
-            </tr>`;
+            commandsTable.row.add([
+                `<span style="font-family: monospace;">${cmd.device_sn}</span>`,
+                `<code>${cmd.command}</code>`,
+                `<span class="status-badge status-${cmd.status}">${cmd.status}</span>`,
+                `<span style="color: var(--text-muted);">${cmd.time}</span>`
+            ]);
         });
-        $('#commands-tbody').html(html);
+        commandsTable.draw(false);
     });
 }
 
