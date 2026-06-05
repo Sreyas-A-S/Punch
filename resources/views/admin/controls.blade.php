@@ -143,15 +143,7 @@ let commandsTable;
 
 $(document).ready(function() {
     // Initial data from server
-    const initialData = @json($recentCommands->map(function($cmd) {
-        return [
-            'device_sn' => $cmd->device_sn,
-            'command' => $cmd->command,
-            'status' => $cmd->status,
-            'time' => $cmd->created_at->diffForHumans(),
-            'timestamp' => $cmd->created_at->toDateTimeString(),
-        ];
-    }));
+    const initialData = @json($recentCommands);
 
     commandsTable = $('#commands-table').DataTable({
         data: initialData,

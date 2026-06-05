@@ -203,7 +203,15 @@ class AdminController extends Controller
     public function controls()
     {
         $devices = SslDevice::all();
-        $recentCommands = \App\Models\DeviceCommand::orderBy('created_at', 'desc')->take(20)->get();
+        $recentCommands = \App\Models\DeviceCommand::orderBy('created_at', 'desc')->take(20)->get()->map(function($cmd) {
+            return [
+                'device_sn' => $cmd->device_sn,
+                'command' => $cmd->command,
+                'status' => $cmd->status,
+                'time' => $cmd->created_at->diffForHumans(),
+                'timestamp' => $cmd->created_at->toDateTimeString(),
+            ];
+        });
         return view('admin.controls', compact('devices', 'recentCommands'));
     }
 
